@@ -33,37 +33,51 @@ class MockExtractionProvider(BaseExtractionProvider):
             })
             
         # Test 2: Healthcare
-        elif "father is 73" in text_lower and "hospital" in text_lower:
+        healthcare_keywords = ["treatment", "medical treatment", "healthcare", "medicine", "hospital", "surgery", "illness", "medical help"]
+        if any(kw in text_lower for kw in healthcare_keywords) and ("father" in text_lower or "73" in text_lower):
+            entities = {
+                "purpose": {"value": "healthcare/treatment", "confidence": 0.90, "source": "Citizen Conversation"}
+            }
+            if "father" in text_lower:
+                entities["relationship"] = {"value": "father", "confidence": 0.95, "source": "Citizen Conversation"}
+            if "73" in text_lower:
+                entities["age"] = {"value": 73, "confidence": 0.98, "source": "Citizen Conversation"}
+                
             return json.dumps({
                 "intent": "healthcare_assistance",
-                "summary": "Needs help with hospital treatment for 73-year-old father.",
-                "entities": {
-                    "age": {"value": 73, "confidence": 0.98, "source": "Citizen Conversation"},
-                    "relationship": {"value": "father", "confidence": 0.95, "source": "Citizen Conversation"},
-                    "purpose": {"value": "healthcare/treatment", "confidence": 0.90, "source": "Citizen Conversation"}
-                }
+                "summary": "Needs help with healthcare treatment.",
+                "entities": entities
             })
             
         # Test 3: Farmer
         elif "farmer" in text_lower:
+            entities = {
+                "is_farmer": {"value": True, "confidence": 0.99, "source": "Citizen Conversation"}
+            }
+            if "own" in text_lower and "land" in text_lower:
+                entities["landholding_status"] = {"value": "present/owned", "confidence": 0.95, "source": "Citizen Conversation"}
+            
             return json.dumps({
                 "intent": "farmer_financial_assistance",
                 "summary": "Farmer needs financial assistance.",
-                "entities": {
-                    "is_farmer": {"value": True, "confidence": 0.99, "source": "Citizen Conversation"}
-                }
+                "entities": entities
             })
             
         # Test 4: Ujjwala / Cooking Fuel
-        elif "28 year old woman" in text_lower and "lpg" in text_lower:
+        lpg_keywords = ["lpg", "gas connection", "cooking gas", "cylinder", "ujjwala"]
+        if any(kw in text_lower for kw in lpg_keywords):
+            entities = {
+                "has_existing_lpg_connection": {"value": False, "confidence": 0.95, "source": "Citizen Conversation"}
+            }
+            if "woman" in text_lower or "female" in text_lower:
+                entities["gender"] = {"value": "female", "confidence": 0.98, "source": "Citizen Conversation"}
+            if "28" in text_lower:
+                entities["age"] = {"value": 28, "confidence": 0.98, "source": "Citizen Conversation"}
+                
             return json.dumps({
                 "intent": "cooking_fuel_assistance",
-                "summary": "28-year-old woman needs an LPG connection.",
-                "entities": {
-                    "age": {"value": 28, "confidence": 0.98, "source": "Citizen Conversation"},
-                    "gender": {"value": "female", "confidence": 0.98, "source": "Citizen Conversation"},
-                    "has_existing_lpg_connection": {"value": False, "confidence": 0.95, "source": "Citizen Conversation"}
-                }
+                "summary": "Citizen needs an LPG connection.",
+                "entities": entities
             })
             
         # Test 5: Unknown / General
