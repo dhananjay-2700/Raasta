@@ -41,15 +41,44 @@
         <form id="scholarship-form">
             <div class="form-grid">
                 <!-- 1. Full Name -->
-                <div class="form-group full-width">
+                <div class="form-group">
                     <label for="applicantName">Full Name of Applicant <span class="req">*</span></label>
                     <input type="text" id="applicantName" name="applicantName" placeholder="Enter full name as per Aadhaar">
+                </div>
+
+                <!-- 1b. Father's Name -->
+                <div class="form-group">
+                    <label for="fatherName">Father's Name <span class="req">*</span></label>
+                    <input type="text" id="fatherName" name="fatherName" placeholder="Enter father's full name">
                 </div>
                 
                 <!-- 2. Date of Birth -->
                 <div class="form-group">
                     <label for="dob">Date of Birth <span class="req">*</span></label>
                     <input type="date" id="dob" name="dob">
+                </div>
+
+                <!-- 2b. Gender -->
+                <div class="form-group">
+                    <label for="gender">Gender <span class="req">*</span></label>
+                    <select id="gender" name="gender">
+                        <option value="">-- Select Gender --</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <!-- 2c. Aadhaar Number -->
+                <div class="form-group">
+                    <label for="aadhaarNumber">Aadhaar Number <span class="req">*</span></label>
+                    <input type="text" id="aadhaarNumber" name="aadhaarNumber" placeholder="12-digit UID number">
+                </div>
+
+                <!-- 2d. PAN Number -->
+                <div class="form-group">
+                    <label for="panNumber">PAN Card Number</label>
+                    <input type="text" id="panNumber" name="panNumber" placeholder="10-digit PAN (e.g. ABCPS1234F)">
                 </div>
 
                 <!-- 3. State -->

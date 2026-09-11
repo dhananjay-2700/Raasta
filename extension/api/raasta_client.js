@@ -32,6 +32,27 @@ class RaastaClient {
             });
         });
     }
+
+    async extractDocument(docType = "auto", fileData = "", fileName = "", text = "") {
+        return new Promise((resolve) => {
+            chrome.runtime.sendMessage({
+                action: "EXTRACT_DOCUMENT",
+                document_type: docType,
+                file_name: fileName,
+                file_content_base64: fileData,
+                text: text
+            }, (response) => {
+                if (chrome.runtime.lastError) {
+                    console.error("RAASTA Client Error:", chrome.runtime.lastError);
+                    resolve({ success: false, error: chrome.runtime.lastError.message });
+                } else if (response && response.success && response.extraction) {
+                    resolve({ success: true, ...response.extraction });
+                } else {
+                    resolve({ success: false, error: "Extraction failed" });
+                }
+            });
+        });
+    }
 }
 
 window.raastaClient = new RaastaClient();

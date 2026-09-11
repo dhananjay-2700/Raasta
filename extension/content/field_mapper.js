@@ -121,6 +121,34 @@ class FieldMapper {
                 question: "Do you own a pucca house?",
                 keywords: ["pucca house", "house type", "pucca मकान", "dwelling"],
                 base_confidence: 0.90
+            },
+            {
+                raasta_field: "aadhaar_number",
+                display_name: "Aadhaar Number",
+                question: "What is your 12-digit Aadhaar number?",
+                keywords: ["aadhaar number", "aadhaar", "aadhar number", "aadhar", "uid number", "uid", "आधार नंबर", "आधार संख्या"],
+                base_confidence: 0.98
+            },
+            {
+                raasta_field: "pan_number",
+                display_name: "PAN Number",
+                question: "What is your 10-character PAN number?",
+                keywords: ["pan number", "pan card number", "pan", "permanent account number", "पैन कार्ड", "पैन"],
+                base_confidence: 0.98
+            },
+            {
+                raasta_field: "father_name",
+                display_name: "Father's Name",
+                question: "What is your father's name?",
+                keywords: ["father's name", "father name", "father", "पिता का नाम", "guardian name", "parent name"],
+                base_confidence: 0.95
+            },
+            {
+                raasta_field: "photo",
+                display_name: "Passport Photograph",
+                question: "Please upload your passport-sized photograph.",
+                keywords: ["photo", "photograph", "passport photo", "upload photo", "applicant photo", "passport size photograph", "तस्वीर"],
+                base_confidence: 0.95
             }
         ];
     }
@@ -231,6 +259,102 @@ class FieldMapper {
     mapFields(detectedFields, citizenData) {
         const res = this.partitionFields(detectedFields, citizenData);
         return res.known;
+    }
+
+    // Suggests relevant Government IDs based on detected form fields
+    suggestDocuments(detectedFields) {
+        const fieldNames = detectedFields.map(f => {
+            const match = this.matchField(f);
+            return match ? match.raasta_field : "";
+        });
+
+        const suggestions = [];
+
+        // 1. Aadhaar Card
+        const aadhaarMatches = ["full_name", "date_of_birth", "gender", "address", "district", "state", "aadhaar_number", "mobile_number"].filter(rf => fieldNames.includes(rf));
+        if (aadhaarMatches.length > 0) {
+            const matchedDisplayNames = aadhaarMatches.map(rf => {
+                const r = this.canonicalRules.find(x => x.raasta_field === rf);
+                return r ? r.display_name : rf;
+            });
+            suggestions.push({
+                id: "aadhaar",
+                name: "Aadhaar Card",
+                icon: "🪪",
+                covers_count: aadhaarMatches.length,
+                matched_fields: matchedDisplayNames,
+                badge: "Recommended",
+                badge_type: "primary",
+                description: `Covers ${matchedDisplayNames.slice(0, 3).join(", ")}${matchedDisplayNames.length > 3 ? ' +' + (matchedDisplayNames.length - 3) + ' more' : ''}`
+            });
+        }
+
+        // 2. PAN Card
+        const panMatches = ["pan_number", "father_name", "full_name", "date_of_birth"].filter(rf => fieldNames.includes(rf));
+        if (panMatches.includes("pan_number") || panMatches.includes("father_name") || panMatches.length >= 2) {
+            const matchedDisplayNames = panMatches.map(rf => {
+                const r = this.canonicalRules.find(x => x.raasta_field === rf);
+                return r ? r.display_name : rf;
+            });
+            suggestions.push({
+                id: "pan",
+                name: "PAN Card",
+                icon: "💳",
+                covers_count: panMatches.length,
+                matched_fields: matchedDisplayNames,
+                badge: panMatches.includes("pan_number") ? "Required" : "Recommended",
+                badge_type: panMatches.includes("pan_number") ? "warning" : "primary",
+                description: `Covers ${matchedDisplayNames.join(", ")}`
+            });
+        }
+
+        // 3. Income Certificate
+        const incomeMatches = ["annual_income", "district", "state"].filter(rf => fieldNames.includes(rf));
+        if (incomeMatches.includes("annual_income")) {
+            suggestions.push({
+                id: "income_certificate",
+                name: "Income Certificate",
+                icon: "📜",
+                covers_count: incomeMatches.length,
+                matched_fields: ["Annual Family Income", "District", "State"],
+                badge: "Income Verification",
+                badge_type: "success",
+                description: "Covers Annual Family Income & Resident Tehsildar jurisdiction"
+            });
+        }
+
+        // 4. Passport Photo
+        const photoMatches = ["photo"].filter(rf => fieldNames.includes(rf));
+        const hasFileInput = detectedFields.some(f => f.input_type === 'file' || (f.label && f.label.toLowerCase().includes('photo')) || (f.name && f.name.toLowerCase().includes('photo')));
+        if (photoMatches.length > 0 || hasFileInput) {
+            suggestions.push({
+                id: "photo",
+                name: "Passport-sized Photo",
+                icon: "📷",
+                covers_count: 1,
+                matched_fields: ["Applicant Photograph"],
+                badge: "Photo Upload",
+                badge_type: "info",
+                description: "Official color portrait with light background"
+            });
+        }
+
+        // 5. Educational Marksheet
+        const eduMatches = ["college_name", "education_level"].filter(rf => fieldNames.includes(rf));
+        if (eduMatches.length > 0) {
+            suggestions.push({
+                id: "marksheet",
+                name: "Educational Marksheet",
+                icon: "🎓",
+                covers_count: eduMatches.length,
+                matched_fields: eduMatches.map(rf => rf === "college_name" ? "College / Institution" : "Education Level"),
+                badge: "Education",
+                badge_type: "secondary",
+                description: "Covers Institution affiliation & qualification"
+            });
+        }
+
+        return suggestions;
     }
 }
 

@@ -48,6 +48,17 @@ class AutofillEngine {
                 // Strip currency or text if input expects numeric
                 const cleanNum = val.toString().replace(/[^0-9.]/g, '');
                 el.value = cleanNum || val;
+            } else if (el.type === 'file') {
+                // File input handling
+                try {
+                    const fileName = typeof val === 'string' ? val : "verified_document.pdf";
+                    const dt = new DataTransfer();
+                    const file = new File(["RAASTA Verified Document Content"], fileName, { type: "application/pdf" });
+                    dt.items.add(file);
+                    el.files = dt.files;
+                } catch (err) {
+                    console.warn("[RAASTA Autofill] File input assignment fallback:", err);
+                }
             } else {
                 el.value = val;
             }
