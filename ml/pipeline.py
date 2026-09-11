@@ -10,7 +10,7 @@ from ml.nba import get_next_best_action
 
 logger = logging.getLogger(__name__)
 
-def run_pipeline(request: PipelineRequest) -> PipelineResponse:
+def run_pipeline(request: PipelineRequest, extraction_provider=None) -> PipelineResponse:
     start_time = time.time()
     diagnostics = {}
     
@@ -26,7 +26,7 @@ def run_pipeline(request: PipelineRequest) -> PipelineResponse:
             
         # 2. Extract citizen information
         t0 = time.time()
-        citizen_info = extract_citizen_information(query)
+        citizen_info = extract_citizen_information(query, provider=extraction_provider)
         diagnostics["extraction_time_ms"] = round((time.time() - t0) * 1000, 2)
         
         # 3. Validate extraction

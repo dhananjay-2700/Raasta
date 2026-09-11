@@ -176,9 +176,9 @@ def extract_citizen_information(text: str, provider: Optional[BaseExtractionProv
         data = json.loads(raw_json_str)
         
         # Apply normalization to all extracted entity values
-        if "entities" in data:
+        if "entities" in data and isinstance(data["entities"], dict):
             for key, entity in data["entities"].items():
-                if "value" in entity:
+                if isinstance(entity, dict) and "value" in entity:
                     entity["value"] = _normalize_value(entity["value"])
         
         validated_data = CitizenInformation(**data)
@@ -200,8 +200,5 @@ def extract_citizen_information(text: str, provider: Optional[BaseExtractionProv
         )
     except Exception as e:
         logger.error(f"Unexpected error during extraction: {e}")
-        return CitizenInformation(
-            intent="unknown",
-            summary=f"An unexpected error occurred: {str(e)}",
-            entities={}
-        )
+        # Raise an infrastructure error so the pipeline doesn't silently treat it as "insufficient_information"
+        raise RuntimeError(f"extraction_error: {str(e)}")
