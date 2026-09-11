@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useJourney } from "@/context/JourneyContext";
+<<<<<<< Updated upstream
 import { motion, useScroll, useTransform, AnimatePresence, useMotionValueEvent, MotionValue } from "framer-motion";
 
 const CanvasSequence = ({ scrollProgress }: { scrollProgress: MotionValue<number> }) => {
@@ -75,6 +76,11 @@ const CanvasSequence = ({ scrollProgress }: { scrollProgress: MotionValue<number
     </div>
   );
 };
+=======
+import { EvidenceCard } from "@/components/Cards/EvidenceCard";
+import { GuidanceCard } from "@/components/Cards/GuidanceCard";
+import SiriOrb from "@/components/ui/SiriOrb";
+>>>>>>> Stashed changes
 
 const AbstractArt = () => (
   <svg viewBox="0 0 800 800" className="w-full h-full opacity-0 animate-fade-in" style={{ animationDelay: '0.2s', animationFillMode: 'forwards' }}>
@@ -118,6 +124,7 @@ export default function Home() {
   const { state, updateState } = useJourney();
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
+<<<<<<< Updated upstream
   const [mounted, setMounted] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -143,6 +150,49 @@ export default function Home() {
   const y2 = useTransform(heroProgress, [0, 1], [0, -300]);
   const opacityHeroText = useTransform(heroProgress, [0, 0.8], [1, 0]);
   
+=======
+  const [siriActive, setSiriActive] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    // Connect to WebSocket for Vosk wake word detection
+    const ws = new WebSocket("ws://localhost:8000/api/ws/voice");
+    
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.event === "wake_word_detected") {
+          setSiriActive(true);
+          setQuery("Listening to your voice...");
+          
+          // Simulate the user speaking and then submitting automatically
+          setTimeout(() => {
+            setSiriActive(false);
+            setQuery("My daughter needs financial help for college fees.");
+            setTimeout(() => {
+              // Trigger the existing submission logic
+              setLoading(true);
+              setTimeout(() => {
+                updateState({
+                  intent: "My daughter needs financial help for college fees.",
+                  lifeEvent: "Higher education",
+                  need: "Financial assistance",
+                  person: "Daughter"
+                });
+                router.push("/journey/understand");
+              }, 1000);
+            }, 1000);
+          }, 4000);
+        }
+      } catch (e) {
+        console.error("Error parsing WS message", e);
+      }
+    };
+
+    return () => ws.close();
+  }, [router, updateState]);
+
+>>>>>>> Stashed changes
   const handleSearchSubmit = async () => {
     if (!query.trim()) return;
     setLoading(true);
@@ -166,6 +216,7 @@ export default function Home() {
   };
 
   return (
+<<<<<<< Updated upstream
     <div className="bg-background text-foreground selection:bg-brand-red selection:text-white">
       
       {/* 1. Canvas Sequence Section */}
@@ -185,6 +236,18 @@ export default function Home() {
                />
              </div>
            </motion.div>
+=======
+    <div className="min-h-screen bg-background text-foreground overflow-hidden pb-32">
+      <SiriOrb active={siriActive} text="Listening..." />
+      {/* Hero Section */}
+      <div className="relative min-h-[90vh] flex flex-col items-center justify-center px-6">
+        
+        {/* Background Abstract Art */}
+        <div className="absolute inset-0 z-0 flex items-center justify-center opacity-80 pointer-events-none">
+          <div className="w-[600px] h-[600px] md:w-[800px] md:h-[800px] max-w-full">
+            <AbstractArt />
+          </div>
+>>>>>>> Stashed changes
         </div>
       </div>
 
