@@ -49,32 +49,58 @@ def run_gemma_31b_inference(prompt: str, is_form_active: bool, form_summary: dic
             f"Extract personal details (fullName, aadhaar, phone, income, address, etc.) "
             f"and include an autoFilledFields dictionary."
         )
+        
+        # Output text response
+        output_text = (
+            f"✨ google/gemma-4-31B-it (HuggingFace): I processed your request for '{prompt}'. "
+            f"I can guide you through government schemes or auto-fill your application form."
+        )
 
-    # Output text response
-    output_text = (
-        f"✨ google/gemma-4-31B-it (HuggingFace): I processed your request for '{prompt}'. "
-        f"I can guide you through government schemes or auto-fill your application form."
-    )
+        # Heuristic field extraction
+        extracted_fields = {}
 
-    # Heuristic field extraction
-    extracted_fields = {}
+        if "name" in prompt.lower():
+            match = re.search(r'(?:name is|i am)\s+([a-zA-Z\s]+)', prompt, re.IGNORECASE)
+            if match:
+                extracted_fields["fullName"] = match.group(1).split(',')[0].strip()
 
-    if "name" in prompt.lower():
-        match = re.search(r'(?:name is|i am)\s+([a-zA-Z\s]+)', prompt, re.IGNORECASE)
-        if match:
-            extracted_fields["fullName"] = match.group(1).split(',')[0].strip()
+        if "aadhaar" in prompt.lower() or re.search(r'\d{4}\s?\d{4}\s?\d{4}', prompt):
+            match = re.search(r'\b\d{4}\s?\d{4}\s?\d{4}\b', prompt)
+            if match:
+                extracted_fields["aadhaar"] = match.group(0)
 
-    if "aadhaar" in prompt.lower() or re.search(r'\d{4}\s?\d{4}\s?\d{4}', prompt):
-        match = re.search(r'\b\d{4}\s?\d{4}\s?\d{4}\b', prompt)
-        if match:
-            extracted_fields["aadhaar"] = match.group(0)
+        if "phone" in prompt.lower() or re.search(r'\b[6-9]\d{9}\b', prompt):
+            match = re.search(r'\b[6-9]\d{9}\b', prompt)
+            if match:
+                extracted_fields["phone"] = match.group(0)
 
-    if "phone" in prompt.lower() or re.search(r'\b[6-9]\d{9}\b', prompt):
-        match = re.search(r'\b[6-9]\d{9}\b', prompt)
-        if match:
-            extracted_fields["phone"] = match.group(0)
-
-    return output_text, extracted_fields
+        return output_text, extracted_fields
+    else:
+        # INTENT EXTRACTION MODE (return valid JSON)
+        text_lower = prompt.lower()
+        
+        # Simple heuristics for the demo
+        intent = "general_assistance"
+        summary = "Citizen is asking for help or assistance."
+        entities = {}
+        
+        if "daughter" in text_lower and "college" in text_lower:
+            intent = "higher_education_financial_assistance"
+            summary = "Needs financial assistance to pay for daughter's college fees."
+        elif "job" in text_lower or "unemploy" in text_lower:
+            intent = "unemployment_assistance"
+            summary = "Citizen is looking for a job or unemployment assistance."
+        elif "farm" in text_lower or "tractor" in text_lower:
+            intent = "farmer_financial_assistance"
+            summary = "Farmer needs financial assistance."
+            
+        output_text = json.dumps({
+            "intent": intent,
+            "summary": summary,
+            "entities": entities
+        })
+        
+        return output_text, {}
 
 
 @app.route('/api/generate', methods=['POST'])

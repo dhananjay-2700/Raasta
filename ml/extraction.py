@@ -2,6 +2,7 @@ import json
 import logging
 from typing import Optional, Any
 from pydantic import ValidationError
+import requests
 
 from ml.schemas import CitizenInformation, EntityExtraction
 from ml.prompts import EXTRACTION_PROMPT
@@ -21,7 +22,7 @@ class MockExtractionProvider(BaseExtractionProvider):
         text_lower = text.lower()
         
         # Test 1: Higher Education
-        if "daughter got admission to college" in text_lower:
+        if "daughter" in text_lower and ("college" in text_lower or "fees" in text_lower or "education" in text_lower):
             return json.dumps({
                 "intent": "higher_education_financial_assistance",
                 "summary": "Needs financial assistance to pay for daughter's college fees.",
@@ -50,7 +51,7 @@ class MockExtractionProvider(BaseExtractionProvider):
             })
             
         # Test 3: Farmer
-        elif "farmer" in text_lower:
+        elif "farmer" in text_lower or "farm" in text_lower or "tractor" in text_lower or "agriculture" in text_lower:
             entities = {
                 "is_farmer": {"value": True, "confidence": 0.99, "source": "Citizen Conversation"}
             }
@@ -59,7 +60,7 @@ class MockExtractionProvider(BaseExtractionProvider):
             
             return json.dumps({
                 "intent": "farmer_financial_assistance",
-                "summary": "Farmer needs financial assistance.",
+                "summary": "Farmer needs financial assistance for agricultural purposes.",
                 "entities": entities
             })
             
@@ -91,17 +92,31 @@ class MockExtractionProvider(BaseExtractionProvider):
 class GemmaExtractionProvider(BaseExtractionProvider):
     """
     GEMMA MODE: A provider that connects to a real Gemma/LLM inference endpoint.
-    Currently a placeholder pending real integration.
     """
-    def __init__(self, endpoint_url: str):
+    def __init__(self, endpoint_url: str = "http://127.0.0.1:5000/api/generate"):
         self.endpoint_url = endpoint_url
         
     def generate_extraction(self, text: str) -> str:
         prompt = EXTRACTION_PROMPT.format(citizen_text=text)
-        # TODO: Implement actual HTTP call to Gemma server
-        # response = requests.post(self.endpoint_url, json={"inputs": prompt})
-        # return response.json()["generated_text"]
-        raise NotImplementedError("Real Gemma inference is not yet configured. Use MockExtractionProvider.")
+        try:
+            payload = {
+                "prompt": prompt,
+                "isFormActive": False,
+                "formSummary": {}
+            }
+            response = requests.post(self.endpoint_url, json=payload, timeout=15)
+            response.raise_for_status()
+            data = response.json()
+            
+            # The huggingface server returns the output in the "text" field
+            if "text" in data:
+                return data["text"]
+            else:
+                raise ValueError("Missing 'text' in Gemma server response")
+                
+        except Exception as e:
+            logger.error(f"Gemma API error: {e}")
+            raise
 
 import re
 
@@ -143,7 +158,11 @@ def extract_citizen_information(text: str, provider: Optional[BaseExtractionProv
         )
         
     if provider is None:
-        provider = MockExtractionProvider()
+        try:
+            provider = GemmaExtractionProvider()
+        except Exception as e:
+            logger.warning(f"Failed to initialize Gemma provider, falling back to mock: {e}")
+            provider = MockExtractionProvider()
         
     try:
         raw_json_str = provider.generate_extraction(text)

@@ -24,7 +24,7 @@ export default function FindService() {
             <div className="flex items-center space-x-3">
               <span className="text-4xl">🎓</span>
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">{state.service?.name || "Education Financial Assistance"}</h2>
+                <h2 className="text-2xl font-bold text-gray-900">{state.service?.scheme_name || "Assistance Service"}</h2>
                 <div className="flex items-center mt-1 space-x-2">
                   <span className="px-2.5 py-0.5 rounded-full bg-red-100 text-red-800 text-xs font-semibold">Potentially relevant</span>
                 </div>
@@ -33,7 +33,7 @@ export default function FindService() {
           </div>
           
           <p className="mt-6 text-gray-700 text-lg">
-            {state.service?.description || "Helps eligible students with education-related financial assistance."}
+            Based on your needs, we found this official government service that may be applicable.
           </p>
 
           <div className="mt-8">

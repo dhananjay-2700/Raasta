@@ -4,3 +4,4 @@ pydantic==2.6.4
 vosk
 sounddevice
 websockets
+requests

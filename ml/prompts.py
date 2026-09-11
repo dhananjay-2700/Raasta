@@ -22,17 +22,17 @@ Instructions:
    - unknown
 6. You must return your output ONLY as a valid JSON object matching the following structure:
 
-{
+{{
   "intent": "string",
   "summary": "string",
-  "entities": {
-    "field_name": {
+  "entities": {{
+    "field_name": {{
       "value": "normalized value",
       "confidence": 0.9,
       "source": "Citizen Conversation"
-    }
-  }
-}
+    }}
+  }}
+}}
 
 Supported field names to look for (use these exact keys if present):
 - full_name

@@ -8,15 +8,8 @@ export default function UnderstandNeed() {
   const router = useRouter();
 
   const handleConfirm = () => {
-    // In a real app, this would hit the backend to fetch the matching service.
-    // For demo, we just populate the context.
-    updateState({
-      service: {
-        id: "EDU_FIN_01",
-        name: "Education Financial Assistance",
-        description: "Helps eligible students with education-related financial assistance.",
-      }
-    });
+    // Navigate to the service page, which will now use state.service 
+    // populated by the ML pipeline.
     router.push("/journey/service");
   };
 
@@ -25,31 +18,37 @@ export default function UnderstandNeed() {
       <div className="space-y-2">
         <h1 className="text-3xl font-bold text-gray-900">I understand what you're looking for.</h1>
         <p className="text-gray-600 text-lg">
-          Your daughter has been admitted to college, and you're looking for financial assistance with her education expenses.
+          {state.lifeEvent || "You are looking for government assistance."}
         </p>
       </div>
 
       <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
         <div className="grid md:grid-cols-3 gap-6">
           <div>
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Life event</p>
-            <p className="text-gray-900 font-medium text-lg">{state.lifeEvent || "Higher education"}</p>
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Intent</p>
+            <p className="text-gray-900 font-medium text-lg capitalize">
+              {(state.intent || "General Request").replace(/_/g, " ")}
+            </p>
           </div>
           <div>
             <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Need</p>
-            <p className="text-gray-900 font-medium text-lg">{state.need || "Financial assistance"}</p>
+            <p className="text-gray-900 font-medium text-lg capitalize">
+              {(state.need || "Assistance").replace(/_/g, " ")}
+            </p>
           </div>
           <div>
             <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Person</p>
-            <p className="text-gray-900 font-medium text-lg">{state.person || "Daughter"}</p>
+            <p className="text-gray-900 font-medium text-lg capitalize">{state.person || "Self"}</p>
           </div>
         </div>
         
         <div className="mt-8 pt-6 border-t border-gray-100">
-          <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Potential intent</p>
+          <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Recommended Scheme</p>
           <div className="flex items-center space-x-3">
-            <span className="text-2xl">🎓</span>
-            <span className="text-xl font-medium text-gray-900">Education assistance</span>
+            <span className="text-2xl">🏛️</span>
+            <span className="text-xl font-medium text-gray-900">
+              {state.service?.scheme_name || "Assistance Program"}
+            </span>
           </div>
         </div>
       </div>

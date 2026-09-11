@@ -22,7 +22,7 @@
           "field": "annual_income",
           "operator": "<=",
           "value": 450000,
-          "description": "Annual family income must not exceed ₹4.5 lakh.",
+          "description": "Annual family income must not exceed \u20b94.5 lakh.",
           "source_reference": "https://scholarships.gov.in"
         },
         {
@@ -118,7 +118,7 @@
           "field": "annual_income",
           "operator": "<=",
           "value": 250000,
-          "description": "Total annual family income must be less than ₹2.5 lakhs.",
+          "description": "Total annual family income must be less than \u20b92.5 lakhs.",
           "source_reference": "https://dosje.gov.in"
         }
       ]
@@ -173,7 +173,7 @@
     "name": "Ayushman Bharat PM-JAY",
     "department": "National Health Authority",
     "category": "healthcare",
-    "description": "Health insurance cover of up to ₹5 lakh per family per year for secondary and tertiary care hospitalization to poor and vulnerable families.",
+    "description": "Health insurance cover of up to \u20b95 lakh per family per year for secondary and tertiary care hospitalization to poor and vulnerable families.",
     "target_problems": [
       "Need money for hospital operation",
       "Cannot afford medical treatment or surgery"
@@ -237,7 +237,7 @@
     "name": "Ayushman Bharat PM-JAY Senior Citizen 70+",
     "department": "National Health Authority",
     "category": "healthcare",
-    "description": "Universal health insurance cover of up to ₹5 lakh per year for all senior citizens aged 70 years and above.",
+    "description": "Universal health insurance cover of up to \u20b95 lakh per year for all senior citizens aged 70 years and above.",
     "target_problems": [
       "Health insurance for elderly",
       "Medical cover for senior citizens over 70"
@@ -294,7 +294,7 @@
     "name": "PM-KISAN Samman Nidhi",
     "department": "Department of Agriculture and Farmers Welfare",
     "category": "agriculture",
-    "description": "Income support of ₹6,000 per year in three equal installments to all landholding farmer families.",
+    "description": "Income support of \u20b96,000 per year in three equal installments to all landholding farmer families.",
     "target_problems": [
       "Need financial support for farming",
       "Agricultural income assistance"
@@ -326,7 +326,7 @@
           "field": "pension_amount",
           "operator": "<",
           "value": 10000,
-          "description": "Pensioners must have a monthly pension of less than ₹10,000.",
+          "description": "Pensioners must have a monthly pension of less than \u20b910,000.",
           "source_reference": "https://pmkisan.gov.in"
         }
       ]
@@ -405,7 +405,7 @@
           "field": "annual_income",
           "operator": "<=",
           "value": 900000,
-          "description": "Annual household income must not exceed ₹9 lakh (up to MIG category limits).",
+          "description": "Annual household income must not exceed \u20b99 lakh (up to MIG category limits).",
           "source_reference": "https://pmay-urban.gov.in"
         }
       ]
@@ -725,7 +725,7 @@
       ],
       "example_queries": [
         "I sell vegetables on a cart and need a small loan",
-        "How can a street vendor get ₹10000 loan from government?",
+        "How can a street vendor get \u20b910000 loan from government?",
         "Financial help for roadside stall owners",
         "Credit scheme for hawkers"
       ]
@@ -758,7 +758,7 @@
           "field": "annual_income",
           "operator": "<=",
           "value": 350000,
-          "description": "Parental annual income must not exceed ₹3.50 lakh.",
+          "description": "Parental annual income must not exceed \u20b93.50 lakh.",
           "source_reference": "https://scholarships.gov.in"
         },
         {
@@ -817,6 +817,69 @@
         "Scholarship for government school students in 9th standard",
         "Financial help to prevent school dropout",
         "Means cum merit scholarship details"
+      ]
+    }
+  },
+  {
+    "scheme_id": "MGNREGA",
+    "name": "Mahatma Gandhi National Rural Employment Guarantee Act",
+    "department": "Ministry of Rural Development",
+    "category": "livelihood",
+    "description": "Provides 100 days of guaranteed wage employment to rural unskilled labor.",
+    "target_problems": [
+      "Lost my job",
+      "Unemployed and need work",
+      "Need daily wage labor in village"
+    ],
+    "eligibility": {
+      "rules": [
+        {
+          "field": "is_rural",
+          "operator": "==",
+          "value": true,
+          "description": "Must reside in a rural area.",
+          "source_reference": "https://nrega.nic.in"
+        }
+      ]
+    },
+    "required_documents": [
+      {
+        "name": "Aadhaar Card",
+        "purpose": "Identity verification",
+        "source_reference": "https://nrega.nic.in"
+      },
+      {
+        "name": "Bank Account Details",
+        "purpose": "Wage deposit",
+        "source_reference": "https://nrega.nic.in"
+      }
+    ],
+    "application_fields": [
+      "fullName",
+      "aadhaar_number"
+    ],
+    "evidence": [
+      {
+        "title": "MGNREGA Portal",
+        "source_name": "MoRD",
+        "source_url": "https://nrega.nic.in",
+        "reference": "Details on 100 days of wage employment."
+      }
+    ],
+    "retrieval": {
+      "keywords": [
+        "job",
+        "work",
+        "unemployed",
+        "wage",
+        "labor",
+        "employment",
+        "MGNREGA"
+      ],
+      "example_queries": [
+        "I lost my job",
+        "I am unemployed and need work",
+        "I want daily wage labor"
       ]
     }
   }

@@ -123,6 +123,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [siriActive, setSiriActive] = useState(false);
+  const [voiceState, setVoiceState] = useState("IDLE");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -142,18 +143,27 @@ export default function Home() {
         const data = JSON.parse(event.data);
         if (data.event === "wake_word_detected") {
           setSiriActive(true);
+          setVoiceState("WAKE_DETECTED");
           setQuery("Listening to your voice...");
+          setTimeout(() => setVoiceState("LISTENING"), 500); // Visual transition
         } else if (data.event === "transcript") {
           setSiriActive(false);
           const transcriptText = data.text;
           
-          // Replace "Listening to your voice..." with the actual transcript, 
-          // or append it if they spoke multiple times.
-          setQuery((prev) => 
-            prev === "Listening to your voice..." 
+          setQuery((prev) => {
+            const newQuery = prev === "Listening to your voice..." 
               ? transcriptText 
-              : prev + " " + transcriptText
-          );
+              : prev + " " + transcriptText;
+            
+            // Automatically submit after state update
+            setTimeout(() => {
+              setVoiceState("PROCESSING");
+              const submitBtn = document.getElementById("search-submit-btn");
+              if (submitBtn) submitBtn.click();
+            }, 100);
+            
+            return newQuery;
+          });
         }
       } catch (e) {
         console.error("Error parsing WS message", e);
@@ -186,15 +196,59 @@ export default function Home() {
   const handleSearchSubmit = async () => {
     if (!query.trim()) return;
     setLoading(true);
-    setTimeout(() => {
-      updateState({
-        intent: query,
-        lifeEvent: "Higher education",
-        need: "Financial assistance",
-        person: "Daughter"
+    
+      const appState = {
+        application_id: state.application?.id || null,
+        uploaded_documents: state.documents.filter((d: any) => d.status === "ready" || d.status === "uploaded").map((d: any) => d.name),
+        consent_given: state.consent,
+        reviewed: false,
+        submitted: !!state.application
+      };
+
+      const res = await fetch("http://localhost:8000/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          query: query,
+          application_state: appState
+        }),
       });
-      router.push("/journey/understand");
-    }, 1000);
+      
+      if (!res.ok) {
+        throw new Error("Failed to analyze query");
+      }
+      
+      const data = await res.json();
+      
+      if (data.status === "success") {
+        setVoiceState("RESULT");
+        updateState({
+          intent: data.extraction?.intent || query,
+          lifeEvent: data.extraction?.summary || "Life Event",
+          need: data.extraction?.intent || "General Assistance",
+          person: data.extraction?.entities?.relationship?.value || "Self",
+          service: data.selected_scheme,
+          eligibility: data.eligibility,
+          evidence: data.provenance,
+          nextBestAction: data.next_best_action
+        });
+        router.push("/journey/understand");
+      } else {
+        // If it's insufficient_information or no_relevant_scheme, 
+        // we can still populate state with nextBestAction and navigate, or show an alert.
+        console.warn("Pipeline status:", data.status);
+        alert(data.next_best_action?.description || "We need more information. Please try again.");
+        setVoiceState("IDLE");
+        setLoading(false);
+      }
+    } catch (error) {
+      console.error("Error submitting query:", error);
+      alert("There was an error processing your request. Please try again.");
+      setVoiceState("IDLE");
+      setLoading(false);
+    }
   };
 
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -329,6 +383,7 @@ export default function Home() {
               />
               <div className="absolute bottom-4 right-4 flex items-center space-x-4">
                 <button 
+                  id="search-submit-btn"
                   onClick={handleSearchSubmit}
                   disabled={loading || !query.trim()}
                   className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-[#111] text-white flex items-center justify-center hover:bg-brand-red hover:scale-105 transition-all disabled:opacity-50 disabled:scale-100 shadow-xl"
