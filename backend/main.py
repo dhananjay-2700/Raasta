@@ -102,13 +102,14 @@ async def get_journey(journey_id: str):
 
 
 
-from ml.pipeline import run_pipeline
+from ml.pipeline import RAASTAPipeline
 from ml.pipeline_schemas import PipelineRequest, PipelineResponse
 
 @app.post("/api/chat", response_model=PipelineResponse)
 async def chat_request(req: PipelineRequest):
     try:
-        response = run_pipeline(req)
+        pipeline = RAASTAPipeline()
+        response = pipeline.run(req)
         if response.status == "error":
             raise HTTPException(status_code=500, detail=response.error_message)
         return response

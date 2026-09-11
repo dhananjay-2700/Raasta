@@ -1,6 +1,6 @@
 import unittest
 from ml.pipeline_schemas import PipelineRequest
-from ml.pipeline import run_pipeline
+from ml.pipeline import RAASTAPipeline
 
 from ml.extraction import MockExtractionProvider
 
@@ -8,10 +8,11 @@ class TestPipeline(unittest.TestCase):
     
     def setUp(self):
         self.provider = MockExtractionProvider()
+        self.pipeline = RAASTAPipeline(extraction_provider=self.provider)
         
     def test_1_education_pipeline(self):
         req = PipelineRequest(query="My daughter got admission to college but I cannot afford the fees. My annual income is 4 lakh.")
-        res = run_pipeline(req, extraction_provider=self.provider)
+        res = self.pipeline.run(req)
         
         self.assertEqual(res.status, "success")
         self.assertIsNotNone(res.extraction)
@@ -25,21 +26,21 @@ class TestPipeline(unittest.TestCase):
 
     def test_2_healthcare_pipeline(self):
         req = PipelineRequest(query="My father is 73 and needs hospital treatment.")
-        res = run_pipeline(req, extraction_provider=self.provider)
+        res = self.pipeline.run(req)
         
         self.assertEqual(res.status, "success")
         self.assertIn("AB_PM_JAY_70_PLUS", [r["scheme_id"] for r in res.retrieval["results"]])
 
     def test_3_farmer_pipeline(self):
         req = PipelineRequest(query="I am a farmer and need financial assistance.")
-        res = run_pipeline(req, extraction_provider=self.provider)
+        res = self.pipeline.run(req)
         
         self.assertEqual(res.status, "success")
         self.assertIn("PM_KISAN", res.selected_scheme["scheme_id"])
 
     def test_4_vague_query(self):
         req = PipelineRequest(query="I need government help.")
-        res = run_pipeline(req, extraction_provider=self.provider)
+        res = self.pipeline.run(req)
         
         # Assert no scheme fabricated, status mapped to insufficient_information
         self.assertEqual(res.status, "insufficient_information")
@@ -50,7 +51,7 @@ class TestPipeline(unittest.TestCase):
 
     def test_5_missing_eligibility_information(self):
         req = PipelineRequest(query="My daughter got admission to college but I cannot afford the fees.")
-        res = run_pipeline(req, extraction_provider=self.provider)
+        res = self.pipeline.run(req)
         
         self.assertEqual(res.status, "success")
         # Income is missing, so eligibility status must be needs_information
