@@ -33,20 +33,23 @@ class MockExtractionProvider(BaseExtractionProvider):
                 }
             })
             
-        # Test 2: Healthcare
-        healthcare_keywords = ["treatment", "medical treatment", "healthcare", "medicine", "hospital", "surgery", "illness", "medical help"]
-        if any(kw in text_lower for kw in healthcare_keywords) and ("father" in text_lower or "73" in text_lower):
+        # Test 2: Healthcare / Hospitalization
+        healthcare_keywords = ["hospitalized", "hospital", "treatment", "medical treatment", "healthcare", "medicine", "surgery", "illness", "medical help"]
+        if any(kw in text_lower for kw in healthcare_keywords) or (("son" in text_lower or "child" in text_lower or "father" in text_lower) and ("money" in text_lower or "afford" in text_lower or "help" in text_lower)):
             entities = {
                 "purpose": {"value": "healthcare/treatment", "confidence": 0.90, "source": "Citizen Conversation"}
             }
-            if "father" in text_lower:
+            if "son" in text_lower:
+                entities["relationship"] = {"value": "son", "confidence": 0.95, "source": "Citizen Conversation"}
+            elif "father" in text_lower:
                 entities["relationship"] = {"value": "father", "confidence": 0.95, "source": "Citizen Conversation"}
             if "73" in text_lower:
                 entities["age"] = {"value": 73, "confidence": 0.98, "source": "Citizen Conversation"}
                 
+            summary = "Needs financial assistance for son's hospitalization and medical treatment." if "son" in text_lower else "Needs help with healthcare treatment."
             return json.dumps({
                 "intent": "healthcare_assistance",
-                "summary": "Needs help with healthcare treatment.",
+                "summary": summary,
                 "entities": entities
             })
             

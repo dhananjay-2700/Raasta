@@ -1,18 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useJourney } from "@/context/JourneyContext";
 import { NextBestActionCard } from "@/components/Cards/NextBestActionCard";
 import { ActivityTimeline } from "@/components/Cards/ActivityTimeline";
 import { EvidenceTrailDrawer } from "@/components/Drawers/EvidenceTrailDrawer";
+import { useVoiceAssistant } from "@/voice/useVoiceAssistant";
 
 export default function JourneyTracking() {
   const params = useParams();
   const { state } = useJourney();
   const [isEvidenceOpen, setIsEvidenceOpen] = useState(false);
+  const { speak } = useVoiceAssistant();
 
   const applicationId = params?.id || state.application?.id || "RAA-EDU-2026-10482";
+
+  useEffect(() => {
+    speak(`Your application ${applicationId} has been successfully prepared. You can track your status or open the portal assistant.`);
+  }, [applicationId, speak]);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">

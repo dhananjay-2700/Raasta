@@ -9,7 +9,10 @@ from ml.schemas import CitizenInformation
 from ml.retrieval_schemas import RetrievalResponse, SchemeResult, Evidence
 
 class SchemeRetriever:
-    def __init__(self, schemes_file: str = "ml/schemes.json"):
+    def __init__(self, schemes_file: str = None):
+        if schemes_file is None:
+            base_dir = os.path.dirname(os.path.abspath(__file__))
+            schemes_file = os.path.join(base_dir, "schemes.json")
         self.schemes_file = schemes_file
         self.schemes_data: List[Dict[str, Any]] = []
         self.documents: List[str] = []
@@ -20,7 +23,12 @@ class SchemeRetriever:
     def _load_and_index(self):
         """Loads schemes.json and builds a searchable TF-IDF document per scheme."""
         if not os.path.exists(self.schemes_file):
-            raise FileNotFoundError(f"Schemes file {self.schemes_file} not found.")
+            # Fallback check relative to cwd
+            alt_path = os.path.join(os.getcwd(), "ml", "schemes.json")
+            if os.path.exists(alt_path):
+                self.schemes_file = alt_path
+            else:
+                raise FileNotFoundError(f"Schemes file {self.schemes_file} not found.")
             
         with open(self.schemes_file, 'r', encoding='utf-8') as f:
             self.schemes_data = json.load(f)

@@ -164,6 +164,8 @@ export default function Home() {
       
       if (data.status === "success") {
         setVoiceState("RESULT");
+        const spokenText = data.next_best_action?.description || data.extraction?.summary || `I matched your request to ${data.selected_scheme?.scheme_name || 'a government scheme'}.`;
+        speak(spokenText);
         updateState({
           intent: data.extraction?.intent || finalQuery,
           lifeEvent: data.extraction?.summary || "Life Event",
@@ -177,7 +179,9 @@ export default function Home() {
         router.push("/journey/understand");
       } else {
         console.warn("Pipeline status:", data.status);
-        alert(data.next_best_action?.description || "We need more information. Please try again.");
+        const errText = data.next_best_action?.description || "We need more information. Please try again.";
+        speak(errText);
+        alert(errText);
         setVoiceState("IDLE");
         setLoading(false);
       }
@@ -189,7 +193,12 @@ export default function Home() {
     }
   };
 
-  const { voiceState: newVoiceState, error: voiceError, forceWakeWord } = useVoiceAssistant({
+  const { voiceState: newVoiceState, error: voiceError, forceWakeWord, speak } = useVoiceAssistant({
+    onWakeWord: () => {
+      const greeting = "Hello, I'm RAASTA. How can I help you today?";
+      setQuery(greeting);
+      speak(greeting);
+    },
     onTranscriptChange: (text) => {
       setQuery(text);
     },
@@ -203,9 +212,6 @@ export default function Home() {
     setVoiceState(newVoiceState);
     if (newVoiceState === 'ACTIVATING' || newVoiceState === 'LISTENING') {
       setSiriActive(true);
-      if (newVoiceState === 'ACTIVATING' && query === "") {
-        setQuery("Listening to your voice...");
-      }
     } else {
       setSiriActive(false);
     }

@@ -1,11 +1,19 @@
 "use client";
 
+import { useEffect } from "react";
 import { useJourney } from "@/context/JourneyContext";
 import { useRouter } from "next/navigation";
+import { useVoiceAssistant } from "@/voice/useVoiceAssistant";
 
 export default function UnderstandNeed() {
   const { state, updateState } = useJourney();
   const router = useRouter();
+  const { speak } = useVoiceAssistant();
+
+  useEffect(() => {
+    const textToSpeak = `I understand what you're looking for. ${state.lifeEvent || "You are looking for government assistance."}`;
+    speak(textToSpeak);
+  }, [state.lifeEvent, speak]);
 
   const handleConfirm = () => {
     // Navigate to the service page, which will now use state.service 

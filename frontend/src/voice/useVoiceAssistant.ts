@@ -3,11 +3,12 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 export type VoiceState = 'IDLE' | 'ACTIVATING' | 'LISTENING' | 'PROCESSING';
 
 interface UseVoiceAssistantProps {
+  onWakeWord?: () => void;
   onTranscriptChange?: (text: string) => void;
   onTranscriptComplete?: (text: string) => void;
 }
 
-export function useVoiceAssistant({ onTranscriptChange, onTranscriptComplete }: UseVoiceAssistantProps = {}) {
+export function useVoiceAssistant({ onWakeWord, onTranscriptChange, onTranscriptComplete }: UseVoiceAssistantProps = {}) {
   const [voiceState, setVoiceState] = useState<VoiceState>('IDLE');
   const [error, setError] = useState<string | null>(null);
   
@@ -147,12 +148,15 @@ export function useVoiceAssistant({ onTranscriptChange, onTranscriptComplete }: 
     wakeWordRecognitionRef.current = null;
 
     setVoiceState('ACTIVATING');
+    if (onWakeWord) {
+      onWakeWord();
+    }
     
     // Brief visual activation (SiriOrb expanding) before capturing the actual command
     setTimeout(() => {
       startCommandListening();
-    }, 500);
-  }, [voiceState]);
+    }, 600);
+  }, [voiceState, onWakeWord]);
 
   const startCommandListening = useCallback(() => {
     setVoiceState('LISTENING');
@@ -227,18 +231,44 @@ export function useVoiceAssistant({ onTranscriptChange, onTranscriptComplete }: 
     }
   }, [onTranscriptChange, onTranscriptComplete]);
 
+  const speak = useCallback((text: string) => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+    try {
+      window.speechSynthesis.cancel();
+      if (!text || !text.strip ? !text.trim() : !text) return;
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'en-IN';
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+      window.speechSynthesis.speak(utterance);
+    } catch (e) {
+      console.warn("[VoiceAssistant] Speech synthesis failed:", e);
+    }
+  }, []);
+
+  const stopSpeaking = useCallback(() => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      try {
+        window.speechSynthesis.cancel();
+      } catch (e) {}
+    }
+  }, []);
+
   // Clean up command listener on unmount
   useEffect(() => {
     return () => {
       if (commandRecognitionRef.current) {
         try { commandRecognitionRef.current.abort(); } catch (e) {}
       }
+      stopSpeaking();
     };
-  }, []);
+  }, [stopSpeaking]);
 
   return {
     voiceState,
     error,
+    speak,
+    stopSpeaking,
     forceWakeWord: () => {
       // Exposing manual trigger purely for extreme edge cases, 
       // but the real continuous listener handles normal activation now.
