@@ -112,14 +112,75 @@ async def get_journey(journey_id: str):
 from ml.pipeline import RAASTAPipeline
 from ml.pipeline_schemas import PipelineRequest, PipelineResponse
 
-@app.post("/api/chat", response_model=PipelineResponse)
+@app.post("/api/chat")
 async def chat_request(req: PipelineRequest):
     try:
-        pipeline = RAASTAPipeline()
+        from ml.extraction import MockExtractionProvider
+        pipeline = RAASTAPipeline(extraction_provider=MockExtractionProvider())
         response = pipeline.run(req)
+        
         if response.status == "error":
             raise HTTPException(status_code=500, detail=response.error_message)
-        return response
+
+        # BridgeBharat Regex Extraction
+        prompt = req.query
+        extracted_fields = {}
+        
+        # Name extraction (BridgeBharat regex)
+        if "name" in prompt.lower():
+            match = re.search(r'(?:name is|i am)\s+([a-zA-Z\s]+)', prompt, re.IGNORECASE)
+            if match:
+                extracted_fields["fullName"] = match.group(1).split(',')[0].strip()
+
+        # Aadhaar extraction (BridgeBharat regex)
+        if "aadhaar" in prompt.lower() or re.search(r'\d{4}\s?\d{4}\s?\d{4}', prompt):
+            match = re.search(r'\b\d{4}\s?\d{4}\s?\d{4}\b', prompt)
+            if match:
+                extracted_fields["aadhaar_number"] = match.group(0)
+
+        # Phone extraction
+        if "phone" in prompt.lower() or "mobile" in prompt.lower():
+            match = re.search(r'\b\d{10}\b', prompt)
+            if match:
+                extracted_fields["mobile_number"] = match.group(0)
+
+        # Annual income extraction
+        if "earn" in prompt.lower() or "lakh" in prompt.lower() or "lac" in prompt.lower():
+            match = re.search(r'(\d+(?:\.\d+)?)\s*(lakh|lac)', prompt, re.IGNORECASE)
+            if match:
+                extracted_fields["annual_income"] = str(int(float(match.group(1)) * 100000))
+        
+        # Age extraction
+        if "years old" in prompt.lower() or "age" in prompt.lower():
+            match = re.search(r'(\d{1,2})\s*(?:years|yrs)?\s*old', prompt, re.IGNORECASE)
+            if match:
+                extracted_fields["age"] = match.group(1)
+
+        # Map to form_data and extraction.entities
+        form_data = {}
+        if response.selected_scheme:
+            scheme_id = response.selected_scheme.get("scheme_id")
+            from ml.retrieval import scheme_retriever
+            full_scheme = next((s for s in scheme_retriever.schemes_data if s["scheme_id"] == scheme_id), None)
+            
+            if full_scheme and "application_fields" in full_scheme:
+                for field in full_scheme["application_fields"]:
+                    if field in extracted_fields:
+                        form_data[field] = extracted_fields[field]
+                    elif response.extraction and hasattr(response.extraction, "entities") and field in response.extraction.entities:
+                        form_data[field] = response.extraction.entities[field]
+
+        # Merge extracted fields directly into extraction.entities for page.tsx compatibility
+        if response.extraction:
+            if not hasattr(response.extraction, 'entities') or response.extraction.entities is None:
+                response.extraction.entities = {}
+            for k, v in extracted_fields.items():
+                response.extraction.entities[k] = v
+
+        res_dict = response.model_dump()
+        res_dict["form_data"] = form_data
+        
+        return res_dict
     except HTTPException:
         raise
     except Exception as e:
