@@ -46,10 +46,16 @@ class FieldMapper {
             });
 
             if (matchedField) {
+                const entity = citizenData[matchedField];
+                // Handle both flat mock objects and rich pipeline objects
+                const val = typeof entity === 'object' && entity !== null && 'value' in entity ? entity.value : entity;
+                const source = typeof entity === 'object' && entity !== null && 'source' in entity ? entity.source : "Citizen Profile";
+                
                 mappings.push({
                     dom_field: field,
                     raasta_field: matchedField,
-                    value: citizenData[matchedField],
+                    value: val,
+                    source: source,
                     confidence: highestConfidence,
                     status: "approved_by_default" // Could be needs_confirmation if low confidence
                 });

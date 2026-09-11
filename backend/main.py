@@ -3,7 +3,24 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import random
 import time
+<<<<<<< Updated upstream
 app = FastAPI(title="RAASTA API")
+=======
+import asyncio
+from contextlib import asynccontextmanager
+
+from backend.vosk_listener import start_listener_thread, wake_word_queue
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Start the background vosk listener
+    loop = asyncio.get_running_loop()
+    start_listener_thread(loop)
+    yield
+    # Clean up can happen here
+
+app = FastAPI(title="RAASTA API", lifespan=lifespan)
+>>>>>>> Stashed changes
 
 app.add_middleware(
     CORSMiddleware,
@@ -65,8 +82,6 @@ from ml.pipeline_schemas import PipelineRequest, PipelineResponse
 async def analyze_request(req: PipelineRequest):
     try:
         response = run_pipeline(req)
-        # If the pipeline itself caught a known error, we still return the PipelineResponse,
-        # but if it threw something unexpected we can return a 500.
         if response.status == "error":
             raise HTTPException(status_code=500, detail=response.error_message)
         return response
@@ -74,3 +89,19 @@ async def analyze_request(req: PipelineRequest):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+# Active Journey Management for Browser Extension
+active_journey_store = {}
+
+@app.post("/api/raasta/journey/active")
+async def set_active_journey(journey_data: dict):
+    # In a real app, this would be keyed by a session or user ID
+    active_journey_store["current"] = journey_data
+    return {"status": "success", "message": "Active journey set."}
+
+@app.get("/api/raasta/journey/active")
+async def get_active_journey():
+    journey = active_journey_store.get("current")
+    if not journey:
+        raise HTTPException(status_code=404, detail="No active journey found.")
+    return {"status": "success", "journey": journey}

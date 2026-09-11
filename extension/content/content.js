@@ -44,7 +44,7 @@ document.addEventListener("raasta:panel_opened", async () => {
                 <div class="raasta-mapping-item">
                     <div class="raasta-field-title">✓ ${m.dom_field.label || m.dom_field.name}</div>
                     <div class="raasta-field-value">${m.value}</div>
-                    <div class="raasta-field-source">Source: RAASTA Profile</div>
+                    <div class="raasta-field-source">Source: ${m.source}</div>
                 </div>
             `;
         });
