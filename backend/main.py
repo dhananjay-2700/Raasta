@@ -1,10 +1,22 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import random
 import time
+import asyncio
+from contextlib import asynccontextmanager
 
-app = FastAPI(title="RAASTA API")
+from vosk_listener import start_listener_thread, wake_word_queue
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Start the background vosk listener
+    loop = asyncio.get_running_loop()
+    start_listener_thread(loop)
+    yield
+    # Clean up can happen here
+
+app = FastAPI(title="RAASTA API", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -57,6 +69,21 @@ async def submit_application(req: FormSubmissionRequest):
         "application_id": app_id,
         "estimated_completion": "7-15 days"
     }
+
+@app.websocket("/api/ws/voice")
+async def voice_websocket(websocket: WebSocket):
+    await websocket.accept()
+    print("WebSocket connected for voice trigger")
+    try:
+        while True:
+            # Wait for an event from the listener queue
+            event = await wake_word_queue.get()
+            # Send to frontend
+            await websocket.send_json(event)
+    except WebSocketDisconnect:
+        print("WebSocket disconnected")
+    except Exception as e:
+        print(f"WebSocket error: {e}")
 
 from ml.pipeline import run_pipeline
 from ml.pipeline_schemas import PipelineRequest, PipelineResponse
