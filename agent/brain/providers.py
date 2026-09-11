@@ -103,7 +103,7 @@ class OllamaProvider(BaseLLMProvider):
 
 class GemmaProvider(BaseLLMProvider):
     """Gemma REST endpoint provider matching the existing BridgeBharat/RAASTA Gemma server."""
-    def __init__(self, endpoint_url: str = "http://127.0.0.1:5000/api/generate"):
+    def __init__(self, endpoint_url: str = "http://127.0.0.1:5005/api/generate"):
         self.endpoint_url = endpoint_url
 
     def generate(self, prompt: str, system_prompt: Optional[str] = None, temperature: float = 0.1, max_tokens: int = 300) -> str:

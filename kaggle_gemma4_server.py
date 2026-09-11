@@ -107,8 +107,8 @@ def generate_endpoint():
 
 
 if __name__ == '__main__':
-    # Open ngrok tunnel on port 5000
-    public_url = ngrok.connect(5000)
+    # Open ngrok tunnel on port 5005
+    public_url = ngrok.connect(5005)
     print("\n" + "=" * 70)
     print("🚀 SUCCESS! Your Kaggle Gemma 4 Server is Live!")
     print(f"🔗 PUBLIC ENDPOINT URL: {public_url.public_url}/api/generate")
@@ -116,4 +116,4 @@ if __name__ == '__main__':
     print("📋 Instructions: Copy the URL above and paste it into lib/services/ai_service.dart")
     print("Set `useLiveKaggleGemma4 = true` in your Flutter app.\n")
 
-    app.run(port=5000)
+    app.run(port=5005)

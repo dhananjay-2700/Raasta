@@ -372,7 +372,21 @@ export default function Home() {
                   }
                 }}
               />
-              <div className="absolute bottom-4 right-4 flex items-center space-x-4">
+              <div className="absolute bottom-4 right-4 flex items-center space-x-2 md:space-x-4">
+                <button
+                  type="button"
+                  onClick={forceWakeWord}
+                  className={`w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center transition-all shadow-xl ${
+                    newVoiceState !== 'IDLE' ? 'bg-brand-red text-white animate-pulse' : 'bg-white text-[#111] hover:bg-gray-100'
+                  }`}
+                  title="Click to speak (or say 'Raasta')"
+                >
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                    <line x1="12" y1="19" x2="12" y2="22"></line>
+                  </svg>
+                </button>
                 <button 
                   id="search-submit-btn"
                   onClick={handleSearchSubmit}

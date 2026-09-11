@@ -1,437 +1,359 @@
-/* RAASTA Floating Widget and Panel Styles */
+/* RAASTA Assistant - Modern Civic Tech UI */
 
+/* Variables */
+:root {
+    --rs-bg: #F7F7F5;
+    --rs-text-primary: #0F172A;
+    --rs-text-secondary: #475569;
+    --rs-text-muted: #94A3B8;
+    --rs-card: #FFFFFF;
+    --rs-border: #E2E8F0;
+    --rs-accent: #0D9488; /* Deep Teal */
+    --rs-accent-hover: #0F766E;
+    --rs-success: #16A34A;
+    --rs-success-bg: #F0FDF4;
+    --rs-warning: #D97706;
+    --rs-warning-bg: #FFFBEB;
+    --rs-info-bg: #F0F9FF;
+    --rs-info-text: #0369A1;
+    --rs-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* Floating Widget */
 #raasta-floating-widget {
     position: fixed;
-    bottom: 20px;
-    right: 20px;
+    bottom: 24px;
+    right: 24px;
     width: 60px;
     height: 60px;
-    background-color: #0056b3;
-    color: white;
+    background-color: var(--rs-card);
+    border: 1px solid var(--rs-border);
+    color: var(--rs-accent);
     border-radius: 50%;
     display: flex;
-    align-items: center;
     justify-content: center;
-    font-size: 24px;
+    align-items: center;
+    box-shadow: var(--rs-shadow);
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
     z-index: 2147483647;
-    transition: transform 0.2s, background-color 0.2s;
+    transition: all 0.2s ease;
     user-select: none;
 }
 
 #raasta-floating-widget:hover {
-    transform: scale(1.08);
-    background-color: #004085;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
 }
 
+.raasta-widget-badge {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    background-color: var(--rs-accent);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 2px solid white;
+}
+
+/* Side Panel */
 #raasta-side-panel {
     position: fixed;
-    top: 20px;
-    right: 20px;
+    top: 24px;
+    right: 24px;
     width: 380px;
     max-height: 85vh;
-    background-color: #ffffff;
-    border: 1px solid #dcdfe6;
+    background-color: var(--rs-bg);
+    border: 1px solid var(--rs-border);
     border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    box-shadow: var(--rs-shadow);
     z-index: 2147483647;
     display: none;
     flex-direction: column;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     overflow: hidden;
+    color: var(--rs-text-primary);
 }
 
 #raasta-side-panel-header {
-    background-color: #f0f4f8;
-    padding: 14px 18px;
-    border-bottom: 1px solid #e1e6eb;
+    background-color: var(--rs-card);
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--rs-border);
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
 }
 
-#raasta-side-panel-header h3 {
+.raasta-header-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.raasta-header-title {
     margin: 0;
     font-size: 16px;
-    color: #003366;
+    font-weight: 700;
+    color: var(--rs-text-primary);
+    letter-spacing: -0.3px;
+}
+
+.raasta-header-subtitle {
+    font-size: 13px;
+    color: var(--rs-text-secondary);
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
+}
+
+.raasta-status-dot {
+    width: 8px;
+    height: 8px;
+    background-color: var(--rs-accent);
+    border-radius: 50%;
+    display: inline-block;
+}
+.raasta-status-dot.idle {
+    background-color: var(--rs-text-muted);
 }
 
 #raasta-close-btn {
     cursor: pointer;
-    font-weight: bold;
-    font-size: 20px;
-    color: #6c757d;
+    font-size: 24px;
+    color: var(--rs-text-muted);
     line-height: 1;
+    transition: color 0.2s;
+}
+#raasta-close-btn:hover {
+    color: var(--rs-text-primary);
 }
 
 #raasta-side-panel-content {
-    padding: 16px;
+    padding: 20px;
     overflow-y: auto;
     flex-grow: 1;
-}
-
-/* Sections */
-.raasta-section-title {
-    font-size: 13px;
-    text-transform: uppercase;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-    color: #6c757d;
-    margin: 14px 0 8px 0;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
+    gap: 16px;
 }
 
-.raasta-badge {
-    display: inline-block;
-    padding: 2px 8px;
+/* Typography & Layout */
+.raasta-h1 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--rs-text-primary);
+    margin: 0 0 4px 0;
+}
+.raasta-p {
+    font-size: 14px;
+    color: var(--rs-text-secondary);
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Cards */
+.raasta-card {
+    background-color: var(--rs-card);
+    border: 1px solid var(--rs-border);
     border-radius: 12px;
-    font-size: 11px;
-    font-weight: bold;
-}
-.raasta-badge-known { background-color: #e8f5e9; color: #2e7d32; }
-.raasta-badge-missing { background-color: #fff3e0; color: #e65100; }
-
-.raasta-mapping-item {
-    margin-bottom: 10px;
-    padding: 10px;
-    border: 1px solid #edf2f7;
-    border-radius: 6px;
-    background-color: #fafbfc;
-}
-
-.raasta-field-title {
-    font-weight: 600;
-    color: #2d3748;
-    font-size: 13px;
-    margin-bottom: 3px;
-}
-
-.raasta-field-value {
-    color: #1a202c;
-    font-size: 14px;
-    font-weight: 500;
-}
-
-.raasta-field-source {
-    color: #718096;
-    font-size: 11px;
-    margin-top: 2px;
-}
-
-/* Voice Card Container */
-.raasta-voice-card {
-    background: linear-gradient(135deg, #f8fafc 0%, #edf2f7 100%);
-    border: 1px solid #cbd5e0;
-    border-radius: 10px;
-    padding: 14px;
-    margin: 12px 0;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
-}
-
-.raasta-voice-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 8px;
-}
-
-.raasta-voice-header .raasta-mic-icon {
-    font-size: 20px;
-}
-
-.raasta-voice-header .raasta-voice-status {
-    font-weight: 600;
-    font-size: 13px;
-    color: #2b6cb0;
-}
-
-.raasta-voice-question {
-    font-size: 14px;
-    color: #1a202c;
-    font-weight: 600;
-    margin-bottom: 10px;
-    line-height: 1.4;
-}
-
-.raasta-transcript-box {
-    background-color: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 6px;
-    padding: 10px;
-    font-size: 13px;
-    min-height: 36px;
-    color: #4a5568;
-    margin-bottom: 10px;
-    font-style: italic;
-}
-
-.raasta-confirmation-box {
-    background-color: #ebf8ff;
-    border: 1px solid #bee3f8;
-    border-radius: 6px;
-    padding: 10px;
-    margin-bottom: 10px;
-}
-
-.raasta-confirmation-label {
-    font-size: 11px;
-    text-transform: uppercase;
-    color: #2b6cb0;
-    font-weight: bold;
-}
-
-.raasta-confirmation-value {
-    font-size: 15px;
-    color: #2c5282;
-    font-weight: 700;
-    margin-top: 2px;
+    padding: 16px;
 }
 
 /* Buttons */
 .raasta-btn-row {
     display: flex;
-    gap: 8px;
+    gap: 12px;
     margin-top: 8px;
 }
-
 .raasta-btn {
     flex: 1;
-    padding: 9px 14px;
-    border-radius: 6px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    border: none;
-    text-align: center;
-    transition: background-color 0.2s;
-}
-
-.raasta-btn-primary {
-    background-color: #3182ce;
-    color: white;
-}
-.raasta-btn-primary:hover { background-color: #2b6cb0; }
-
-.raasta-btn-success {
-    background-color: #38a169;
-    color: white;
-}
-.raasta-btn-success:hover { background-color: #2f855a; }
-
-.raasta-btn-secondary {
-    background-color: #e2e8f0;
-    color: #4a5568;
-}
-.raasta-btn-secondary:hover { background-color: #cbd5e0; }
-
-.raasta-btn-mic {
-    width: 100%;
-    padding: 10px;
-    background-color: #3182ce;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-}
-.raasta-btn-mic:hover { background-color: #2b6cb0; }
-
-.raasta-btn-mic.listening {
-    background-color: #e53e3e;
-    animation: raasta-pulse 1.5s infinite;
-}
-
-@keyframes raasta-pulse {
-    0% { box-shadow: 0 0 0 0 rgba(229, 62, 62, 0.5); }
-    70% { box-shadow: 0 0 0 10px rgba(229, 62, 62, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(229, 62, 62, 0); }
-}
-
-#raasta-status-message {
-    margin-top: 12px;
-    font-size: 13px;
-    color: #2f855a;
-    font-weight: 600;
-    text-align: center;
-    padding: 8px;
-    border-radius: 6px;
-    background-color: #f0fff4;
-    border: 1px solid #c6f6d5;
-}
-
-/* Fields Summary Grid & Chips */
-.raasta-fields-summary-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-bottom: 12px;
-    padding: 8px;
-    background-color: #f8fafc;
-    border: 1px solid #e2e8f0;
+    padding: 10px 16px;
     border-radius: 8px;
-    max-height: 140px;
-    overflow-y: auto;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    text-align: center;
+    transition: all 0.15s ease;
+}
+.raasta-btn-primary {
+    background-color: var(--rs-accent);
+    color: white;
+}
+.raasta-btn-primary:hover {
+    background-color: var(--rs-accent-hover);
+}
+.raasta-btn-secondary {
+    background-color: white;
+    border: 1px solid var(--rs-border);
+    color: var(--rs-text-primary);
+}
+.raasta-btn-secondary:hover {
+    background-color: #F8FAFC;
 }
 
-.raasta-field-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 3px 8px;
-    border-radius: 12px;
-    font-size: 11px;
-    font-weight: 500;
-}
-
-.chip-known {
-    background-color: #e8f5e9;
-    color: #2e7d32;
-    border: 1px solid #c8e6c9;
-}
-
-.chip-missing {
-    background-color: #fff3e0;
-    color: #e65100;
-    border: 1px solid #ffe0b2;
-}
-
-.chip-icon {
-    font-weight: bold;
-    font-size: 11px;
-}
-
-.chip-label {
-    max-width: 130px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-/* Document Suggestion Cards */
-.raasta-doc-suggestions-container {
+/* Journey Progress Component */
+.raasta-journey-progress {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    margin-bottom: 12px;
+    margin: 12px 0;
+}
+.raasta-progress-step {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+}
+.raasta-progress-icon {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 14px;
+}
+.raasta-progress-step.completed {
+    color: var(--rs-text-primary);
+}
+.raasta-progress-step.current {
+    color: var(--rs-accent);
+    font-weight: 600;
+}
+.raasta-progress-step.upcoming {
+    color: var(--rs-text-muted);
 }
 
-.raasta-doc-card {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    padding: 10px 12px;
-    transition: all 0.2s;
+/* Stats / Summary */
+.raasta-stats-row {
+    display: flex;
+    gap: 16px;
+    margin: 16px 0;
+}
+.raasta-stat-item {
+    display: flex;
+    flex-direction: column;
+}
+.raasta-stat-number {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--rs-text-primary);
+}
+.raasta-stat-label {
+    font-size: 12px;
+    color: var(--rs-text-secondary);
 }
 
-.raasta-doc-card:hover {
-    border-color: #3182ce;
-    box-shadow: 0 2px 8px rgba(49, 130, 206, 0.1);
+/* Fields List */
+.raasta-field-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
-
-.doc-card-uploaded {
-    background-color: #f0fff4;
-    border-color: #9ae6b4;
-}
-
-.raasta-doc-header {
+.raasta-field-item {
     display: flex;
     align-items: flex-start;
     gap: 10px;
+    font-size: 14px;
 }
-
-.raasta-doc-icon {
-    font-size: 22px;
-    line-height: 1;
-}
-
-.raasta-doc-info {
-    flex: 1;
-}
-
-.raasta-doc-title {
-    font-weight: 600;
-    font-size: 13px;
-    color: #2d3748;
-}
-
-.raasta-doc-desc {
-    font-size: 11px;
-    color: #718096;
+.raasta-field-icon {
     margin-top: 2px;
-    line-height: 1.3;
 }
 
-.raasta-doc-badge {
+/* Badges */
+.raasta-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     font-size: 10px;
     font-weight: 700;
-    padding: 2px 6px;
-    border-radius: 4px;
-    white-space: nowrap;
+    padding: 3px 8px;
+    border-radius: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.raasta-badge-verified {
+    background-color: var(--rs-info-bg);
+    color: var(--rs-info-text);
+    border: 1px solid #BAE6FD;
+}
+.raasta-badge-ai {
+    background-color: #F5F3FF;
+    color: #6D28D9;
+    border: 1px solid #DDD6FE;
+}
+.raasta-badge-warning {
+    background-color: var(--rs-warning-bg);
+    color: var(--rs-warning);
+    border: 1px solid #FDE68A;
 }
 
-.badge-primary { background-color: #ebf8ff; color: #3182ce; }
-.badge-warning { background-color: #fffaf0; color: #dd6b20; }
-.badge-success { background-color: #f0fff4; color: #38a169; }
-.badge-info { background-color: #f7fafc; color: #4a5568; }
-.badge-secondary { background-color: #edf2f7; color: #4a5568; }
-
-.raasta-doc-actions {
-    margin-top: 8px;
-    display: flex;
-    justify-content: flex-end;
-}
-
-.raasta-btn-doc-quick {
-    background-color: #edf2f7;
-    color: #2b6cb0;
-    border: 1px solid #cbd5e0;
-    padding: 5px 12px;
-    border-radius: 5px;
-    font-size: 11px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.raasta-btn-doc-quick:hover {
-    background-color: #3182ce;
-    color: #ffffff;
-    border-color: #3182ce;
-}
-
-/* Upload Drop Zone */
-.raasta-upload-zone {
-    border: 2px dashed #cbd5e0;
-    background-color: #f7fafc;
-    border-radius: 10px;
-    padding: 16px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.2s ease-in-out;
+/* Field Review State */
+.raasta-review-item {
+    background-color: var(--rs-card);
+    border: 1px solid var(--rs-border);
+    border-radius: 8px;
+    padding: 12px;
     margin-bottom: 12px;
 }
-
-.raasta-upload-zone:hover {
-    border-color: #3182ce;
-    background-color: #ebf8ff;
+.raasta-review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+.raasta-review-title {
+    font-weight: 600;
+    font-size: 14px;
+}
+.raasta-review-row {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-bottom: 8px;
+    font-size: 13px;
+}
+.raasta-review-label {
+    color: var(--rs-text-secondary);
+    font-size: 12px;
+}
+.raasta-review-value {
+    color: var(--rs-text-primary);
+    font-weight: 500;
 }
 
-/* Extracted Details List */
-.raasta-extracted-list {
-    max-height: 200px;
-    overflow-y: auto;
-    border: 1px solid #edf2f7;
-    border-radius: 8px;
-    padding: 6px;
-    background: #fafbfc;
+/* Field Highlight Animation on Gov Page */
+@keyframes raasta-highlight-fill {
+    0% { background-color: rgba(13, 148, 136, 0.2); }
+    100% { background-color: transparent; }
 }
+.raasta-filled-highlight {
+    animation: raasta-highlight-fill 2s ease-out forwards;
+    border: 2px solid var(--rs-accent) !important;
+}
+
+/* Success State */
+.raasta-success-icon {
+    font-size: 48px;
+    color: var(--rs-success);
+    margin-bottom: 16px;
+    text-align: center;
+}
+.raasta-success-box {
+    background-color: var(--rs-success-bg);
+    border: 1px solid #BBF7D0;
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+}
+
+/* Utilities */
+.raasta-mt-4 { margin-top: 16px; }
+.raasta-mb-4 { margin-bottom: 16px; }
+.raasta-text-center { text-align: center; }

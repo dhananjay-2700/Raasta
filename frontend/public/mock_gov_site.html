@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>National Scholarship Portal - Apply for PM-USP Scholarship</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; background-color: #f0f4f8; margin: 0; padding: 24px; color: #2d3748; }
+        .container { max-width: 780px; margin: 0 auto; background: white; padding: 32px; border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); border-top: 5px solid #ff9933; }
+        .header-gov { display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #e2e8f0; padding-bottom: 16px; margin-bottom: 24px; }
+        .header-title h2 { margin: 0; color: #003366; font-size: 22px; }
+        .header-title p { margin: 4px 0 0 0; color: #718096; font-size: 13px; }
+        .emblem { font-size: 32px; font-weight: bold; color: #003366; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+        .form-group { margin-bottom: 16px; }
+        .form-group.full-width { grid-column: span 2; }
+        label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 13px; color: #4a5568; }
+        label span.req { color: #e53e3e; }
+        input[type="text"], input[type="number"], input[type="date"], select { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e0; border-radius: 5px; box-sizing: border-box; font-size: 14px; }
+        input:focus, select:focus { outline: none; border-color: #3182ce; box-shadow: 0 0 0 3px rgba(66,153,225,0.15); }
+        .notice-box { background-color: #ebf8ff; border-left: 4px solid #3182ce; padding: 12px; margin-bottom: 24px; font-size: 13px; color: #2b6cb0; border-radius: 4px; }
+        .btn-submit { background-color: #003366; color: white; padding: 12px 28px; border: none; border-radius: 5px; font-size: 15px; font-weight: 600; cursor: pointer; transition: background-color 0.2s; }
+        .btn-submit:hover { background-color: #002244; }
+        .btn-container { margin-top: 24px; padding-top: 16px; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-gov">
+            <div class="header-title">
+                <h2>Government of India - National Scholarship Portal</h2>
+                <p>Central Sector Scheme of Scholarships for College and University Students (PM-USP)</p>
+            </div>
+            <div class="emblem">🏛️</div>
+        </div>
+
+        <div class="notice-box">
+            ℹ️ Please ensure that all information provided matches your Aadhaar and official educational certificates.
+        </div>
+        
+        <form id="scholarship-form">
+            <div class="form-grid">
+                <!-- 1. Full Name -->
+                <div class="form-group">
+                    <label for="applicantName">Full Name of Applicant <span class="req">*</span></label>
+                    <input type="text" id="applicantName" name="applicantName" placeholder="Enter full name as per Aadhaar">
+                </div>
+
+                <!-- 1b. Father's Name -->
+                <div class="form-group">
+                    <label for="fatherName">Father's Name <span class="req">*</span></label>
+                    <input type="text" id="fatherName" name="fatherName" placeholder="Enter father's full name">
+                </div>
+                
+                <!-- 2. Date of Birth -->
+                <div class="form-group">
+                    <label for="dob">Date of Birth <span class="req">*</span></label>
+                    <input type="date" id="dob" name="dob">
+                </div>
+
+                <!-- 2b. Gender -->
+                <div class="form-group">
+                    <label for="gender">Gender <span class="req">*</span></label>
+                    <select id="gender" name="gender">
+                        <option value="">-- Select Gender --</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <!-- 2c. Aadhaar Number -->
+                <div class="form-group">
+                    <label for="aadhaarNumber">Aadhaar Number <span class="req">*</span></label>
+                    <input type="text" id="aadhaarNumber" name="aadhaarNumber" placeholder="12-digit UID number">
+                </div>
+
+                <!-- 2d. PAN Number -->
+                <div class="form-group">
+                    <label for="panNumber">PAN Card Number</label>
+                    <input type="text" id="panNumber" name="panNumber" placeholder="10-digit PAN (e.g. ABCPS1234F)">
+                </div>
+
+                <!-- 3. State -->
+                <div class="form-group">
+                    <label for="state">State of Residence <span class="req">*</span></label>
+                    <select id="state" name="state">
+                        <option value="">-- Select State --</option>
+                        <option value="Rajasthan">Rajasthan</option>
+                        <option value="Delhi">Delhi</option>
+                        <option value="Maharashtra">Maharashtra</option>
+                        <option value="Uttar Pradesh">Uttar Pradesh</option>
+                        <option value="Karnataka">Karnataka</option>
+                    </select>
+                </div>
+                
+                <!-- 4. District -->
+                <div class="form-group">
+                    <label for="district">District <span class="req">*</span></label>
+                    <input type="text" id="district" name="district" placeholder="Enter district name">
+                </div>
+
+                <!-- 5. Annual Family Income -->
+                <div class="form-group">
+                    <label for="familyIncome">Annual Family Income (in ₹) <span class="req">*</span></label>
+                    <input type="number" id="familyIncome" name="familyIncome" placeholder="e.g. 400000">
+                </div>
+
+                <!-- 6. Address -->
+                <div class="form-group full-width">
+                    <label for="address">Residential Address <span class="req">*</span></label>
+                    <input type="text" id="address" name="address" placeholder="House no, Street, Locality">
+                </div>
+
+                <!-- 7. College Name -->
+                <div class="form-group">
+                    <label for="college">College / Institution Name <span class="req">*</span></label>
+                    <input type="text" id="college" name="college" placeholder="Enter college or university name">
+                </div>
+
+                <!-- 8. Mobile Number -->
+                <div class="form-group">
+                    <label for="mobile">Mobile Number <span class="req">*</span></label>
+                    <input type="text" id="mobile" name="mobile" placeholder="10-digit mobile number">
+                </div>
+            </div>
+            
+            <div class="btn-container">
+                <button type="submit" id="submitBtn" class="btn-submit">Submit Application</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('scholarship-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Form submitted manually by citizen!');
+        });
+    </script>
+</body>
+</html>

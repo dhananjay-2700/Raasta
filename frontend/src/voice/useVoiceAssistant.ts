@@ -173,6 +173,7 @@ export function useVoiceAssistant({ onWakeWord, onTranscriptChange, onTranscript
       recognition.interimResults = true; 
 
       let finalTranscript = '';
+      let lastInterimTranscript = '';
 
       recognition.onresult = (event: any) => {
         let interimTranscript = '';
@@ -186,6 +187,7 @@ export function useVoiceAssistant({ onWakeWord, onTranscriptChange, onTranscript
           }
         }
 
+        lastInterimTranscript = interimTranscript;
         const currentText = (finalTranscript + ' ' + interimTranscript).trim();
         // Note: the word "raasta" might accidentally be spoken as part of the command. 
         // This won't trigger an infinite loop because the wake word listener is currently stopped.
@@ -204,11 +206,12 @@ export function useVoiceAssistant({ onWakeWord, onTranscriptChange, onTranscript
       };
 
       recognition.onend = () => {
+        const finalText = (finalTranscript + ' ' + lastInterimTranscript).trim();
         // Once the user stops speaking the command
-        if (finalTranscript.trim().length > 0) {
+        if (finalText.length > 0) {
           setVoiceState('PROCESSING');
           if (onTranscriptComplete) {
-            onTranscriptComplete(finalTranscript.trim());
+            onTranscriptComplete(finalText);
           }
           
           // In the actual app, this might wait for a backend response before returning to IDLE.

@@ -1,13 +1,23 @@
-// Main Orchestrator for RAASTA Browser Extension: Batch Form Reading, Smart ID Suggestions & Automated Document Autofill
+// Main Orchestrator for RAASTA Browser Extension
+
+const STATES = {
+    IDLE: 'IDLE',
+    JOURNEY_DETECTED: 'JOURNEY_DETECTED',
+    FORM_ANALYZED: 'FORM_ANALYZED',
+    FIELD_REVIEW: 'FIELD_REVIEW',
+    AUTOFILLING: 'AUTOFILLING',
+    VERIFICATION: 'VERIFICATION',
+    READY_TO_SUBMIT: 'READY_TO_SUBMIT',
+    SUCCESS: 'SUCCESS'
+};
 
 class RaastaExtensionController {
     constructor() {
+        this.state = STATES.IDLE;
         this.journey = null;
         this.detectedFields = [];
         this.knownFields = [];
         this.missingFields = [];
-        this.suggestedDocs = [];
-        this.uploadedDocs = [];
         this.citizenData = {};
         this.autofilledCount = 0;
 
@@ -20,340 +30,471 @@ class RaastaExtensionController {
 
     async handlePanelOpened() {
         try {
-            window.raastaUI.updateContent(`
-                <div style="text-align: center; padding: 24px; color: #4a5568;">
-                    <div style="font-size: 28px; margin-bottom: 8px;">🛣️</div>
-                    <div style="font-weight: 600; color: #003366;">Scanning form fields...</div>
-                    <div style="font-size: 12px; color: #718096; margin-top: 4px;">Connecting to RAASTA Journey Engine</div>
-                </div>
-            `);
-
             this.journey = await window.raastaClient.getActiveJourney();
 
             if (!this.journey) {
-                window.raastaUI.updateContent(`
-                    <div style="text-align: center; padding: 20px;">
-                        <p style="font-weight: 600; color: #e53e3e;">No active RAASTA application journey found.</p>
-                        <p style="font-size: 13px; color: #6c757d; line-height: 1.5;">Please select a scheme on the RAASTA web app first, or navigate to a government form.</p>
-                    </div>
-                `);
-                return;
+                this.state = STATES.IDLE;
+                window.raastaUI.setJourneyActive(false);
+            } else {
+                this.state = STATES.JOURNEY_DETECTED;
+                window.raastaUI.setJourneyActive(true);
+                this.citizenData = Object.assign({}, this.journey.citizen_data || {});
             }
-
-            // Initialize citizen data from active journey
-            this.citizenData = Object.assign({}, this.journey.citizen_data || {});
-
-            // 1. READ ALL FORM FIELDS AT ONCE
-            this.detectedFields = window.formDetector.detectForms();
-            if (this.detectedFields.length === 0) {
-                window.raastaUI.updateContent(`
-                    <div style="margin-bottom: 12px; font-weight: bold; color: #003366; font-size: 15px;">
-                        🏛️ ${this.journey.scheme_name}
-                    </div>
-                    <div style="padding: 16px; background: #fffaf0; border-radius: 8px; border: 1px solid #feebc8; font-size: 13px; color: #7b341e;">
-                        No recognizable form inputs or controls found on this page.
-                    </div>
-                `);
-                return;
-            }
-
-            // 2. SUGGEST GOVERNMENT IDS BASED ON ALL DETECTED FIELDS
-            this.suggestedDocs = window.fieldMapper.suggestDocuments(this.detectedFields);
-
-            // 3. RE-PARTITION FIELDS
-            this.updatePartition();
-
-            // 4. RENDER DASHBOARD
-            this.renderMainView();
-
+            this.render();
         } catch (e) {
-            console.error("[RAASTA Content] Initialization error:", e);
-            window.raastaUI.updateContent(`<p style="color:red; padding: 16px;">Failed to scan page controls. Please try again.</p>`);
+            console.error("[RAASTA] Initialization error:", e);
+            this.state = STATES.IDLE;
+            this.render();
         }
     }
 
-    updatePartition() {
-        const partitioned = window.fieldMapper.partitionFields(
-            this.detectedFields,
-            this.citizenData
-        );
-        this.knownFields = partitioned.known;
-        this.missingFields = partitioned.missing;
+    render() {
+        switch (this.state) {
+            case STATES.IDLE:
+                this.renderIdle();
+                break;
+            case STATES.JOURNEY_DETECTED:
+                this.renderJourneyDetected();
+                break;
+            case STATES.FORM_ANALYZED:
+                this.renderFormAnalyzed();
+                break;
+            case STATES.FIELD_REVIEW:
+                this.renderFieldReview();
+                break;
+            case STATES.AUTOFILLING:
+                this.renderAutofilling();
+                break;
+            case STATES.VERIFICATION:
+                this.renderVerification();
+                break;
+            case STATES.READY_TO_SUBMIT:
+                this.renderReadyToSubmit();
+                break;
+            case STATES.SUCCESS:
+                this.renderSuccess();
+                break;
+        }
     }
 
-    renderMainView() {
-        this.updatePartition();
+    renderJourneyProgress(currentStep) {
+        // Steps: Need -> Service -> Eligibility -> Application -> Documents -> Submit
+        const steps = [
+            { id: 'need', label: 'Need understood' },
+            { id: 'service', label: 'Service selected' },
+            { id: 'eligibility', label: 'Eligibility checked' },
+            { id: 'application', label: 'Application' },
+            { id: 'documents', label: 'Documents' },
+            { id: 'submit', label: 'Submit' }
+        ];
+
+        let html = '<div class="raasta-journey-progress">';
+        let passedCurrent = false;
+
+        steps.forEach((step) => {
+            if (step.id === currentStep) {
+                html += `
+                    <div class="raasta-progress-step current">
+                        <div class="raasta-progress-icon">●</div>
+                        <span>${step.label}</span>
+                    </div>`;
+                passedCurrent = true;
+            } else if (!passedCurrent) {
+                html += `
+                    <div class="raasta-progress-step completed">
+                        <div class="raasta-progress-icon">✓</div>
+                        <span>${step.label}</span>
+                    </div>`;
+            } else {
+                html += `
+                    <div class="raasta-progress-step upcoming">
+                        <div class="raasta-progress-icon">○</div>
+                        <span>${step.label}</span>
+                    </div>`;
+            }
+        });
+        html += '</div>';
+        return html;
+    }
+
+    // STATE 1
+    renderIdle() {
+        const html = `
+            <div class="raasta-text-center">
+                <h2 class="raasta-h1">No active application journey</h2>
+                <p class="raasta-p raasta-mt-4">Start a journey on RAASTA to get help with a government service.</p>
+                <div class="raasta-btn-row" style="margin-top: 24px;">
+                    <button class="raasta-btn raasta-btn-primary" onclick="window.open('http://localhost:3000', '_blank')">Open RAASTA</button>
+                </div>
+            </div>
+        `;
+        window.raastaUI.updateContent(html);
+    }
+
+    // STATE 2
+    renderJourneyDetected() {
+        const title = this.journey?.category || 'EDUCATION SUPPORT';
+        const scheme = this.journey?.scheme_name || 'Scholarship Application';
+
+        const html = `
+            <div style="text-transform: uppercase; font-size: 11px; font-weight: 700; color: var(--rs-text-secondary); letter-spacing: 0.5px;">
+                ${title}
+            </div>
+            <h2 class="raasta-h1">${scheme}</h2>
+            
+            ${this.renderJourneyProgress('application')}
+            
+            <div style="margin-top: 16px; font-size: 13px; font-weight: 600; color: var(--rs-text-secondary);">Step 4 of 6</div>
+            <p class="raasta-p" style="margin-top: 4px;">I'll help you complete this application.</p>
+            
+            <div class="raasta-btn-row" style="margin-top: 24px;">
+                <button id="btn-analyze" class="raasta-btn raasta-btn-primary">Analyze application</button>
+            </div>
+        `;
+        
+        window.raastaUI.updateContent(html);
+        
+        document.getElementById('btn-analyze').addEventListener('click', () => {
+            this.detectedFields = window.formDetector.detectForms();
+            const partitioned = window.fieldMapper.partitionFields(this.detectedFields, this.citizenData);
+            this.knownFields = partitioned.known;
+            this.missingFields = partitioned.missing;
+            this.state = STATES.FORM_ANALYZED;
+            this.render();
+        });
+    }
+
+    // STATE 3
+    renderFormAnalyzed() {
+        const total = this.detectedFields.length;
+        const auto = this.knownFields.length;
+        
+        // Let's pretend 2 need confirmation and the rest need info for demo purposes.
+        const confirmFields = this.knownFields.filter(f => f.raasta_field === 'aadhaar' || f.raasta_field === 'income' || f.raasta_field === 'pan');
+        const autoFields = this.knownFields.filter(f => !confirmFields.includes(f));
+        const missingCount = this.missingFields.length;
 
         let html = `
-            <!-- Scheme Header -->
-            <div style="margin-bottom: 14px; border-bottom: 1px solid #edf2f7; padding-bottom: 10px;">
-                <div style="font-weight: 800; color: #003366; font-size: 16px; display: flex; align-items: center; gap: 6px;">
-                    <span>🏛️</span>
-                    <span>${this.journey.scheme_name}</span>
+            <h2 class="raasta-h1">Application form detected</h2>
+            <p class="raasta-p">I found ${total} fields on this government form.</p>
+            
+            <div class="raasta-stats-row">
+                <div class="raasta-stat-item">
+                    <span class="raasta-stat-number" style="color: var(--rs-accent);">${autoFields.length}</span>
+                    <span class="raasta-stat-label">Can be filled automatically</span>
                 </div>
-                <div style="font-size: 12px; color: #4a5568; margin-top: 4px; display: flex; justify-content: space-between; align-items: center;">
-                    <span>All <strong>${this.detectedFields.length}</strong> fields scanned at once</span>
-                    <span class="raasta-badge ${this.missingFields.length === 0 ? 'raasta-badge-known' : 'raasta-badge-missing'}">
-                        ${this.knownFields.length} of ${this.detectedFields.length} ready
-                    </span>
+                <div class="raasta-stat-item">
+                    <span class="raasta-stat-number" style="color: var(--rs-warning);">${confirmFields.length}</span>
+                    <span class="raasta-stat-label">Need your confirmation</span>
+                </div>
+                <div class="raasta-stat-item">
+                    <span class="raasta-stat-number" style="color: var(--rs-text-muted);">${missingCount}</span>
+                    <span class="raasta-stat-label">Needs information</span>
                 </div>
             </div>
+            
+            <div class="raasta-card">
+                <div style="font-size: 11px; font-weight: 700; color: var(--rs-text-secondary); margin-bottom: 12px; text-transform: uppercase;">FORM FIELDS</div>
+                <div class="raasta-field-list">
         `;
 
-        // 1. BATCH FORM READ SUMMARY (ALL AT ONCE)
-        html += `
-            <div class="raasta-section-title">
-                <span>All Detected Fields (${this.detectedFields.length})</span>
-                <span style="font-size: 11px; text-transform: none; color: #3182ce; cursor: pointer;" id="raasta-toggle-fields-btn">Hide List ▴</span>
-            </div>
-            <div id="raasta-all-fields-list" class="raasta-fields-summary-grid">
-        `;
-
-        this.detectedFields.forEach(f => {
-            const mapped = window.fieldMapper.matchField(f);
-            const isKnown = mapped && this.citizenData[mapped.raasta_field];
+        autoFields.forEach(f => {
             html += `
-                <div class="raasta-field-chip ${isKnown ? 'chip-known' : 'chip-missing'}">
-                    <span class="chip-icon">${isKnown ? '✓' : '○'}</span>
-                    <span class="chip-label" title="${f.label}">${f.label}</span>
+                <div class="raasta-field-item">
+                    <span class="raasta-field-icon" style="color: var(--rs-success);">✓</span>
+                    <span>${f.display_name}</span>
+                </div>
+            `;
+        });
+        
+        confirmFields.forEach(f => {
+            html += `
+                <div class="raasta-field-item">
+                    <span class="raasta-field-icon" style="color: var(--rs-warning);">⚠</span>
+                    <span>${f.display_name}</span>
                 </div>
             `;
         });
 
-        html += `</div>`;
-
-        // 2. SUGGESTED GOVERNMENT IDS ACCORDING TO FORM FIELDS
-        if (this.suggestedDocs.length > 0) {
+        this.missingFields.forEach(f => {
             html += `
-                <div class="raasta-section-title" style="margin-top: 16px;">
-                    <span>Suggested Government IDs</span>
-                    <span class="raasta-badge" style="background:#e0f2fe; color:#0369a1;">Smart Recommendations</span>
+                <div class="raasta-field-item">
+                    <span class="raasta-field-icon" style="color: var(--rs-text-muted);">○</span>
+                    <span>${f.label}</span>
                 </div>
-                <div class="raasta-doc-suggestions-container">
             `;
+        });
 
-            this.suggestedDocs.forEach(doc => {
-                const isUploaded = this.uploadedDocs.some(d => d.type === doc.name || d.type === doc.id);
-                html += `
-                    <div class="raasta-doc-card ${isUploaded ? 'doc-card-uploaded' : ''}">
-                        <div class="raasta-doc-header">
-                            <span class="raasta-doc-icon">${doc.icon}</span>
-                            <div class="raasta-doc-info">
-                                <div class="raasta-doc-title">${doc.name}</div>
-                                <div class="raasta-doc-desc">${doc.description}</div>
-                            </div>
-                            <span class="raasta-doc-badge badge-${doc.badge_type}">${isUploaded ? '✓ Uploaded' : doc.badge}</span>
-                        </div>
-                        <div class="raasta-doc-actions">
-                            <button class="raasta-btn-doc-quick" data-doc-type="${doc.id}">
-                                ${isUploaded ? 'Re-upload ' + doc.name : '⚡ Upload ' + doc.name}
-                            </button>
-                        </div>
-                    </div>
-                `;
-            });
-
-            html += `</div>`;
-        }
-
-        // 3. UPLOAD FILES OPTION
         html += `
-            <div class="raasta-section-title" style="margin-top: 18px;">
-                <span>Upload Government IDs / Documents</span>
-                <span class="raasta-badge raasta-badge-known">Automatic OCR</span>
+                </div>
             </div>
-
-            <div class="raasta-upload-zone" id="raasta-drop-zone">
-                <input type="file" id="raasta-file-input" accept=".pdf,.png,.jpg,.jpeg" style="display: none;" />
-                <div style="font-size: 30px; margin-bottom: 6px;">📂</div>
-                <div style="font-size: 13px; font-weight: 600; color: #2d3748;">
-                    Click to browse or drop your Government ID here
-                </div>
-                <div style="font-size: 11px; color: #718096; margin-top: 3px;">
-                    Supports Aadhaar, PAN, Income Certificate, Photo (PDF, JPG, PNG)
-                </div>
-                <button id="raasta-browse-btn" class="raasta-btn raasta-btn-primary" style="margin-top: 10px; width: auto; padding: 7px 18px;">
-                    📁 Choose File to Upload
-                </button>
+            
+            <div class="raasta-btn-row" style="margin-top: 24px;">
+                <button id="btn-review-fields" class="raasta-btn raasta-btn-primary">Review fields</button>
             </div>
         `;
-
-        // 4. EXTRACTED DETAILS & ONE-CLICK AUTOFILL
-        if (this.knownFields.length > 0) {
-            html += `
-                <div class="raasta-section-title" style="margin-top: 18px;">
-                    <span>Extracted Verified Details (${this.knownFields.length} Ready to Fill)</span>
-                </div>
-                <div class="raasta-extracted-list">
-            `;
-
-            this.knownFields.forEach(f => {
-                html += `
-                    <div class="raasta-mapping-item">
-                        <div class="raasta-field-title">✓ ${f.display_name}</div>
-                        <div class="raasta-field-value">${f.value}</div>
-                        <div class="raasta-field-source">Source: ${f.source}</div>
-                    </div>
-                `;
-            });
-
-            html += `
-                </div>
-                <button id="raasta-autofill-all-btn" class="raasta-btn raasta-btn-success" style="width: 100%; margin-top: 14px; padding: 12px; font-size: 14px;">
-                    ⚡ Autofill All Details from IDs (${this.knownFields.length} Fields)
-                </button>
-            `;
-        }
-
-        if (this.autofilledCount > 0) {
-            html += `
-                <div id="raasta-status-message" style="margin-top: 14px;">
-                    🎉 Successfully autofilled ${this.autofilledCount} fields on this portal!
-                </div>
-            `;
-        }
 
         window.raastaUI.updateContent(html);
-        this.bindEvents();
+
+        document.getElementById('btn-review-fields').addEventListener('click', () => {
+            this.state = STATES.FIELD_REVIEW;
+            this.render();
+        });
     }
 
-    bindEvents() {
-        // Toggle fields list
-        const toggleBtn = document.getElementById("raasta-toggle-fields-btn");
-        const fieldsList = document.getElementById("raasta-all-fields-list");
-        if (toggleBtn && fieldsList) {
-            toggleBtn.addEventListener("click", () => {
-                if (fieldsList.style.display === "none") {
-                    fieldsList.style.display = "flex";
-                    toggleBtn.innerText = "Hide List ▴";
-                } else {
-                    fieldsList.style.display = "none";
-                    toggleBtn.innerText = "Show List ▾";
-                }
-            });
-        }
+    // STATE 4
+    renderFieldReview() {
+        let html = `
+            <h2 class="raasta-h1">Review fields</h2>
+            <p class="raasta-p">Please confirm the information before I fill the form.</p>
+            <div style="margin-top: 16px;">
+        `;
 
-        // Browse File Button & Hidden Input
-        const browseBtn = document.getElementById("raasta-browse-btn");
-        const fileInput = document.getElementById("raasta-file-input");
-        const dropZone = document.getElementById("raasta-drop-zone");
+        this.knownFields.forEach(f => {
+            const isSensitive = ['aadhaar', 'pan', 'income'].includes(f.raasta_field);
+            
+            html += `
+                <div class="raasta-review-item">
+                    <div class="raasta-review-header">
+                        <div class="raasta-review-title">${f.display_name}</div>
+                        ${isSensitive 
+                            ? '<span class="raasta-badge raasta-badge-warning">⚠ NEEDS CONFIRMATION</span>' 
+                            : '<span class="raasta-badge raasta-badge-verified">🏛 VERIFIED SOURCE</span>'}
+                    </div>
+                    <div class="raasta-review-row">
+                        <span class="raasta-review-label">Government form:</span>
+                        <span class="raasta-review-value">${f.label}</span>
+                    </div>
+                    <div class="raasta-review-row">
+                        <span class="raasta-review-label">RAASTA:</span>
+                        <span class="raasta-review-value">${f.value}</span>
+                    </div>
+            `;
+            
+            if (isSensitive) {
+                html += `
+                    <div class="raasta-btn-row" style="margin-top: 12px;">
+                        <button class="raasta-btn raasta-btn-secondary" style="font-size: 12px; padding: 6px;">Edit</button>
+                        <button class="raasta-btn raasta-btn-secondary btn-confirm-sensitive" style="font-size: 12px; padding: 6px; background-color: var(--rs-accent); color: white; border: none;">Confirm</button>
+                    </div>
+                `;
+            } else {
+                html += `
+                    <div style="font-size: 12px; color: var(--rs-success); font-weight: 600; display: flex; align-items: center; gap: 4px; margin-top: 8px;">
+                        ✓ Verified profile information
+                    </div>
+                `;
+            }
+            
+            html += `</div>`;
+        });
 
-        if (browseBtn && fileInput) {
-            browseBtn.addEventListener("click", () => fileInput.click());
-            fileInput.addEventListener("change", (e) => {
-                if (e.target.files && e.target.files.length > 0) {
-                    this.handleFileSelected(e.target.files[0]);
-                }
-            });
-        }
+        html += `
+            </div>
+            <div class="raasta-btn-row" style="margin-top: 24px;">
+                <button id="btn-fill-fields" class="raasta-btn raasta-btn-primary">Fill confirmed fields</button>
+            </div>
+        `;
 
-        // Drag & Drop
-        if (dropZone) {
-            dropZone.addEventListener("dragover", (e) => {
-                e.preventDefault();
-                dropZone.style.borderColor = "#3182ce";
-                dropZone.style.backgroundColor = "#ebf8ff";
-            });
-            dropZone.addEventListener("dragleave", () => {
-                dropZone.style.borderColor = "#cbd5e0";
-                dropZone.style.backgroundColor = "#f7fafc";
-            });
-            dropZone.addEventListener("drop", (e) => {
-                e.preventDefault();
-                dropZone.style.borderColor = "#cbd5e0";
-                dropZone.style.backgroundColor = "#f7fafc";
-                if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-                    this.handleFileSelected(e.dataTransfer.files[0]);
-                }
-            });
-        }
+        window.raastaUI.updateContent(html);
 
-        // Quick Document Buttons
-        const quickBtns = document.querySelectorAll(".raasta-btn-doc-quick");
-        quickBtns.forEach(btn => {
-            btn.addEventListener("click", () => {
-                const docType = btn.getAttribute("data-doc-type");
-                this.handleSampleDocUpload(docType);
+        // Mock interaction for confirming sensitive fields
+        document.querySelectorAll('.btn-confirm-sensitive').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const item = e.target.closest('.raasta-review-item');
+                item.style.borderColor = 'var(--rs-success)';
+                e.target.innerText = 'Confirmed';
+                e.target.style.backgroundColor = 'var(--rs-success)';
+                e.target.disabled = true;
             });
         });
 
-        // Autofill All Button
-        const autofillBtn = document.getElementById("raasta-autofill-all-btn");
-        if (autofillBtn) {
-            autofillBtn.addEventListener("click", async () => {
-                autofillBtn.disabled = true;
-                autofillBtn.innerText = "Filling form fields...";
-                const result = await window.autofillEngine.fill(this.knownFields);
-                this.autofilledCount = result.success_count;
-                this.renderMainView();
-            });
-        }
+        document.getElementById('btn-fill-fields').addEventListener('click', () => {
+            this.state = STATES.AUTOFILLING;
+            this.render();
+        });
     }
 
-    async handleFileSelected(file) {
-        if (!file) return;
+    // STATE 5
+    async renderAutofilling() {
+        let html = `
+            <h2 class="raasta-h1">Filling application...</h2>
+            <p class="raasta-p">Please wait while I populate the form.</p>
+            <div class="raasta-card raasta-mt-4">
+                <div class="raasta-field-list">
+        `;
 
-        // Show uploading indicator
-        window.raastaUI.updateContent(`
-            <div style="text-align: center; padding: 30px; color: #4a5568;">
-                <div style="font-size: 32px; margin-bottom: 10px;">⏳</div>
-                <div style="font-weight: 700; color: #003366; font-size: 15px;">Extracting ${file.name}...</div>
-                <div style="font-size: 12px; color: #718096; margin-top: 4px;">RAASTA is reading your government document</div>
+        this.knownFields.forEach(f => {
+            html += `
+                <div class="raasta-field-item">
+                    <span class="raasta-field-icon" style="color: var(--rs-text-muted);">○</span>
+                    <span>${f.display_name}</span>
+                </div>
+            `;
+        });
+
+        html += `
+                </div>
             </div>
-        `);
+        `;
+        window.raastaUI.updateContent(html);
 
-        try {
-            // Read file as Base64 / Text
-            const reader = new FileReader();
-            reader.onload = async () => {
-                const base64 = reader.result;
-                const extractionRes = await window.raastaClient.extractDocument("auto", base64, file.name, "");
+        // Perform autofill
+        const result = await window.autofillEngine.fill(this.knownFields);
+        this.autofilledCount = result.success_count;
 
-                this.applyExtractedData(extractionRes, file.name);
-            };
-            reader.readAsDataURL(file);
-        } catch (err) {
-            console.error("File read error:", err);
-            this.renderMainView();
-        }
+        // Briefly highlight fields on the actual web page
+        this.knownFields.forEach(f => {
+            const el = document.querySelector(f.selector);
+            if (el) {
+                el.classList.add('raasta-filled-highlight');
+                setTimeout(() => el.classList.remove('raasta-filled-highlight'), 2000);
+            }
+        });
+
+        // Add a small delay for UX so user sees the "Filling..." state
+        setTimeout(() => {
+            this.state = STATES.VERIFICATION;
+            this.render();
+        }, 1500);
     }
 
-    async handleSampleDocUpload(docType) {
-        window.raastaUI.updateContent(`
-            <div style="text-align: center; padding: 30px; color: #4a5568;">
-                <div style="font-size: 32px; margin-bottom: 10px;">🔍</div>
-                <div style="font-weight: 700; color: #003366; font-size: 15px;">Extracting ${docType.toUpperCase()} Card...</div>
-                <div style="font-size: 12px; color: #718096; margin-top: 4px;">Running verified OCR & field mapping</div>
+    // STATE 6
+    renderVerification() {
+        const confirmFields = this.knownFields.filter(f => f.raasta_field === 'aadhaar' || f.raasta_field === 'income' || f.raasta_field === 'pan');
+        const autoFields = this.knownFields.filter(f => !confirmFields.includes(f));
+
+        let html = `
+            <h2 class="raasta-h1">Application details ready</h2>
+            <p class="raasta-p" style="margin-bottom: 16px;">
+                <span style="font-weight: 600; color: var(--rs-success);">${autoFields.length} fields verified</span><br/>
+                <span style="font-weight: 600; color: var(--rs-warning);">${confirmFields.length} fields need confirmation</span>
+            </p>
+            
+            <div class="raasta-card">
+                <div class="raasta-field-list">
+        `;
+
+        autoFields.forEach(f => {
+            html += `
+                <div class="raasta-field-item">
+                    <span class="raasta-field-icon" style="color: var(--rs-success);">✓</span>
+                    <span>${f.display_name}</span>
+                </div>
+            `;
+        });
+        
+        confirmFields.forEach(f => {
+            html += `
+                <div class="raasta-field-item" style="margin-top: 8px;">
+                    <span class="raasta-field-icon" style="color: var(--rs-warning);">⚠</span>
+                    <div style="display: flex; flex-direction: column;">
+                        <span>${f.display_name}</span>
+                        <span style="font-size: 11px; color: var(--rs-warning);">Please verify on form</span>
+                    </div>
+                </div>
+            `;
+        });
+
+        html += `
+                </div>
             </div>
-        `);
+            
+            <div class="raasta-btn-row" style="margin-top: 24px;">
+                <button id="btn-edit" class="raasta-btn raasta-btn-secondary">Edit details</button>
+                <button id="btn-review-app" class="raasta-btn raasta-btn-primary">Review application</button>
+            </div>
+        `;
 
-        const extractionRes = await window.raastaClient.extractDocument(docType, "", `${docType}_document.pdf`, "");
-        this.applyExtractedData(extractionRes, `${docType}_document.pdf`);
+        window.raastaUI.updateContent(html);
+
+        document.getElementById('btn-review-app').addEventListener('click', () => {
+            this.state = STATES.READY_TO_SUBMIT;
+            this.render();
+        });
+        document.getElementById('btn-edit').addEventListener('click', () => {
+            this.state = STATES.FIELD_REVIEW;
+            this.render();
+        });
     }
 
-    applyExtractedData(extractionRes, fileName) {
-        if (extractionRes && extractionRes.extracted_fields) {
-            // Merge extracted facts into citizenData
-            for (const [k, v] of Object.entries(extractionRes.extracted_fields)) {
-                this.citizenData[k] = v;
+    // STATE 7
+    renderReadyToSubmit() {
+        let html = `
+            <h2 class="raasta-h1">You're ready to submit</h2>
+            <p class="raasta-p">All required information has been reviewed.</p>
+            
+            <div class="raasta-card raasta-mt-4">
+                <div class="raasta-field-list">
+                    <div class="raasta-field-item">
+                        <span class="raasta-field-icon" style="color: var(--rs-success);">✓</span>
+                        <span>Required fields complete</span>
+                    </div>
+                    <div class="raasta-field-item">
+                        <span class="raasta-field-icon" style="color: var(--rs-success);">✓</span>
+                        <span>Information reviewed</span>
+                    </div>
+                    <div class="raasta-field-item">
+                        <span class="raasta-field-icon" style="color: var(--rs-success);">✓</span>
+                        <span>Documents ready</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 16px; padding: 12px; background: #F8FAFC; border-radius: 8px; font-size: 12px; color: var(--rs-text-secondary); display: flex; gap: 8px; align-items: flex-start;">
+                <span style="font-size: 16px;">🤖</span>
+                <span>RAASTA will not submit the application without your confirmation.</span>
+            </div>
+            
+            <div class="raasta-btn-row" style="margin-top: 24px;">
+                <button id="btn-submit" class="raasta-btn raasta-btn-primary" style="background-color: var(--rs-success);">Continue to submission</button>
+            </div>
+        `;
+
+        window.raastaUI.updateContent(html);
+
+        document.getElementById('btn-submit').addEventListener('click', () => {
+            // Trigger actual form submission on the government portal
+            const govSubmitBtn = document.getElementById('submitBtn');
+            if (govSubmitBtn) {
+                govSubmitBtn.click();
             }
 
-            this.uploadedDocs.push({
-                type: extractionRes.document_type || "Government ID",
-                name: fileName,
-                fieldsCount: Object.keys(extractionRes.extracted_fields).length,
-                timestamp: Date.now()
-            });
+            this.state = STATES.SUCCESS;
+            this.render();
+        });
+    }
 
-            // Automatically fill matching fields on the form
-            this.updatePartition();
-            window.autofillEngine.fill(this.knownFields).then(res => {
-                this.autofilledCount = res.success_count;
-                this.renderMainView();
-            });
-        } else {
-            this.renderMainView();
-        }
+    // STATE 8
+    renderSuccess() {
+        const appId = "NSP-" + Math.floor(Math.random() * 100000000);
+        let html = `
+            <div class="raasta-success-box">
+                <div class="raasta-success-icon">✓</div>
+                <h2 class="raasta-h1" style="color: var(--rs-success);">Application submitted</h2>
+                <p class="raasta-p" style="margin-top: 8px; margin-bottom: 16px;">Your scholarship application journey has been updated.</p>
+                
+                <div style="background: white; border-radius: 8px; padding: 12px; text-align: left; margin-bottom: 16px; border: 1px solid #E2E8F0;">
+                    <div style="font-size: 12px; color: var(--rs-text-secondary);">Application ID</div>
+                    <div style="font-size: 16px; font-weight: 700; color: var(--rs-text-primary);">${appId}</div>
+                    <div style="margin-top: 8px; display: flex; align-items: center; gap: 6px;">
+                        <span class="raasta-status-dot"></span>
+                        <span style="font-size: 13px; font-weight: 600; color: var(--rs-accent);">Status: Submitted</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="raasta-btn-row" style="margin-top: 24px;">
+                <button id="btn-close" class="raasta-btn raasta-btn-secondary">Close assistant</button>
+                <button class="raasta-btn raasta-btn-primary" onclick="window.open('http://localhost:3000', '_blank')">View journey</button>
+            </div>
+        `;
+
+        window.raastaUI.updateContent(html);
+
+        document.getElementById('btn-close').addEventListener('click', () => {
+            window.raastaUI.togglePanel();
+        });
     }
 }
 

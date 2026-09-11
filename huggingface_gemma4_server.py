@@ -127,7 +127,7 @@ def generate():
 if __name__ == '__main__':
     public_url = None
     try:
-        public_url = ngrok.connect(5000).public_url
+        public_url = ngrok.connect(5005).public_url
     except Exception as e:
         print(f"⚠️ ngrok tunnel skipped ({e}). Running server on local endpoint.")
 
@@ -136,9 +136,9 @@ if __name__ == '__main__':
     if public_url:
         print(f"🔗 PUBLIC ENDPOINT URL: {public_url}/api/generate")
     else:
-        print(f"🔗 LOCAL ENDPOINT URL:  http://127.0.0.1:5000/api/generate")
+        print(f"🔗 LOCAL ENDPOINT URL:  http://127.0.0.1:5005/api/generate")
     print("=" * 75 + "\n")
     print("📋 Instructions: Copy the URL above and paste it into lib/services/ai_service.dart")
     print("Set `useLiveHuggingFace = true` in your Flutter app.\n")
 
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5005)
