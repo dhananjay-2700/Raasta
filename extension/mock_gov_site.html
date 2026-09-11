@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>National Scholarship Portal - Apply</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f6f8; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h2 { color: #003366; border-bottom: 2px solid #ff9933; padding-bottom: 10px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; color: #333; }
+        input[type="text"], input[type="number"], select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .btn-submit { background-color: #003366; color: white; padding: 12px 24px; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; }
+        .btn-submit:hover { background-color: #002244; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>PM-USP Scholarship Application Form</h2>
+        <p>Please fill out all mandatory fields carefully.</p>
+        
+        <form id="scholarship-form">
+            <div class="form-group">
+                <label for="applicantName">Full Name of Applicant *</label>
+                <input type="text" id="applicantName" name="applicantName" placeholder="Enter as per Aadhaar">
+            </div>
+            
+            <div class="form-group">
+                <label for="stateDomicile">State of Residence *</label>
+                <select id="stateDomicile" name="stateDomicile">
+                    <option value="">Select State</option>
+                    <option value="Rajasthan">Rajasthan</option>
+                    <option value="Delhi">Delhi</option>
+                    <option value="Maharashtra">Maharashtra</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="familyIncome">Annual Family Income (in ₹) *</label>
+                <input type="number" id="familyIncome" name="familyIncome" placeholder="e.g. 400000">
+            </div>
+
+            <div class="form-group">
+                <label for="eduLevel">Current Education Level *</label>
+                <input type="text" id="eduLevel" name="eduLevel" placeholder="e.g. College, High School">
+            </div>
+            
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="declaration" name="declaration">
+                    I declare that the information provided is correct to the best of my knowledge.
+                </label>
+            </div>
+            
+            <button type="button" class="btn-submit" onclick="alert('Form Submitted Successfully!')">Submit Application</button>
+        </form>
+    </div>
+</body>
+</html>
