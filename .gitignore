@@ -1,0 +1,8 @@
+node_modules/
+.next/
+venv/
+backend/venv/
+__pycache__/
+*.pyc
+.DS_Store
+*.mp3
