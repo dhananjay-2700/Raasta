@@ -104,10 +104,16 @@ class RAASTAPipeline:
                     diagnostics=diagnostics
                 )
             
+            official_url = full_scheme_data.get("scheme_url")
+            if not official_url and full_scheme_data.get("evidence"):
+                official_url = full_scheme_data["evidence"][0].get("source_url")
+            if not official_url:
+                official_url = "https://www.myscheme.gov.in/"
+
             selected_scheme_meta = {
                 "scheme_id": top_scheme_result.scheme_id,
                 "scheme_name": top_scheme_result.scheme_name,
-                "scheme_url": full_scheme_data.get("scheme_url", "http://127.0.0.1:8000/extension/mock_gov_site.html")
+                "scheme_url": official_url
             }
             diagnostics["selected_scheme_id"] = top_scheme_result.scheme_id
             diagnostics["selected_scheme_score"] = top_scheme_result.score

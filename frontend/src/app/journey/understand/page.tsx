@@ -14,7 +14,7 @@ export default function UnderstandNeed() {
   };
 
   const handleSchemeClick = async () => {
-    const targetUrl = state.service?.scheme_url || "http://127.0.0.1:8000/extension/mock_gov_site.html";
+    const targetUrl = state.service?.scheme_url || "https://www.myscheme.gov.in/";
     try {
       await fetch("http://127.0.0.1:8000/api/raasta/journey/active", {
         method: "POST",
