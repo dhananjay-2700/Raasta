@@ -3,8 +3,10 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useJourney } from "@/context/JourneyContext";
-<<<<<<< Updated upstream
 import { motion, useScroll, useTransform, AnimatePresence, useMotionValueEvent, MotionValue } from "framer-motion";
+import { EvidenceCard } from "@/components/Cards/EvidenceCard";
+import { GuidanceCard } from "@/components/Cards/GuidanceCard";
+import SiriOrb from "@/components/ui/SiriOrb";
 
 const CanvasSequence = ({ scrollProgress }: { scrollProgress: MotionValue<number> }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -76,11 +78,6 @@ const CanvasSequence = ({ scrollProgress }: { scrollProgress: MotionValue<number
     </div>
   );
 };
-=======
-import { EvidenceCard } from "@/components/Cards/EvidenceCard";
-import { GuidanceCard } from "@/components/Cards/GuidanceCard";
-import SiriOrb from "@/components/ui/SiriOrb";
->>>>>>> Stashed changes
 
 const AbstractArt = () => (
   <svg viewBox="0 0 800 800" className="w-full h-full opacity-0 animate-fade-in" style={{ animationDelay: '0.2s', animationFillMode: 'forwards' }}>
@@ -124,19 +121,55 @@ export default function Home() {
   const { state, updateState } = useJourney();
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
-<<<<<<< Updated upstream
   const [mounted, setMounted] = useState(false);
+  const [siriActive, setSiriActive] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  useEffect(() => {
+    // Connect to WebSocket for Vosk wake word detection
+    const ws = new WebSocket("ws://localhost:8000/api/ws/voice");
+    
+    ws.onopen = () => console.log("[VOICE] WebSocket connected to backend.");
+    ws.onerror = (e) => console.warn("[VOICE] WebSocket error (often safe to ignore during Strict Mode unmounts):", e);
+    ws.onclose = () => console.log("[VOICE] WebSocket disconnected. Refresh to reconnect.");
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.event === "wake_word_detected") {
+          setSiriActive(true);
+          setQuery("Listening to your voice...");
+        } else if (data.event === "transcript") {
+          setSiriActive(false);
+          const transcriptText = data.text;
+          
+          // Replace "Listening to your voice..." with the actual transcript, 
+          // or append it if they spoke multiple times.
+          setQuery((prev) => 
+            prev === "Listening to your voice..." 
+              ? transcriptText 
+              : prev + " " + transcriptText
+          );
+        }
+      } catch (e) {
+        console.error("Error parsing WS message", e);
+      }
+    };
+
+    return () => {
+      ws.close();
+    };
+  }, [router, updateState]);
+
   // 1. Canvas Sequence Scroll hook
   const canvasContainerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress: canvasProgress } = useScroll({
     target: canvasContainerRef,
-    offset: ["start start", "end start"]
+    offset: ["start start", "end end"]
   });
 
   // 2. Hero Parallax Scroll hook
@@ -150,49 +183,6 @@ export default function Home() {
   const y2 = useTransform(heroProgress, [0, 1], [0, -300]);
   const opacityHeroText = useTransform(heroProgress, [0, 0.8], [1, 0]);
   
-=======
-  const [siriActive, setSiriActive] = useState(false);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  useEffect(() => {
-    // Connect to WebSocket for Vosk wake word detection
-    const ws = new WebSocket("ws://localhost:8000/api/ws/voice");
-    
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (data.event === "wake_word_detected") {
-          setSiriActive(true);
-          setQuery("Listening to your voice...");
-          
-          // Simulate the user speaking and then submitting automatically
-          setTimeout(() => {
-            setSiriActive(false);
-            setQuery("My daughter needs financial help for college fees.");
-            setTimeout(() => {
-              // Trigger the existing submission logic
-              setLoading(true);
-              setTimeout(() => {
-                updateState({
-                  intent: "My daughter needs financial help for college fees.",
-                  lifeEvent: "Higher education",
-                  need: "Financial assistance",
-                  person: "Daughter"
-                });
-                router.push("/journey/understand");
-              }, 1000);
-            }, 1000);
-          }, 4000);
-        }
-      } catch (e) {
-        console.error("Error parsing WS message", e);
-      }
-    };
-
-    return () => ws.close();
-  }, [router, updateState]);
-
->>>>>>> Stashed changes
   const handleSearchSubmit = async () => {
     if (!query.trim()) return;
     setLoading(true);
@@ -216,8 +206,8 @@ export default function Home() {
   };
 
   return (
-<<<<<<< Updated upstream
-    <div className="bg-background text-foreground selection:bg-brand-red selection:text-white">
+    <div className="min-h-screen bg-background text-foreground selection:bg-brand-red selection:text-white pb-32">
+      <SiriOrb active={siriActive} text="Listening..." />
       
       {/* 1. Canvas Sequence Section */}
       <div ref={canvasContainerRef} className="h-[400vh] w-full relative z-40 bg-[#111]">
@@ -236,18 +226,6 @@ export default function Home() {
                />
              </div>
            </motion.div>
-=======
-    <div className="min-h-screen bg-background text-foreground overflow-hidden pb-32">
-      <SiriOrb active={siriActive} text="Listening..." />
-      {/* Hero Section */}
-      <div className="relative min-h-[90vh] flex flex-col items-center justify-center px-6">
-        
-        {/* Background Abstract Art */}
-        <div className="absolute inset-0 z-0 flex items-center justify-center opacity-80 pointer-events-none">
-          <div className="w-[600px] h-[600px] md:w-[800px] md:h-[800px] max-w-full">
-            <AbstractArt />
-          </div>
->>>>>>> Stashed changes
         </div>
       </div>
 
@@ -337,7 +315,7 @@ export default function Home() {
             <div className="relative z-10 group">
               <textarea
                 ref={textareaRef}
-                className="w-full p-4 md:p-6 pb-20 text-2xl md:text-4xl bg-transparent border-b border-gray-300 focus:border-brand-red resize-none outline-none transition-colors duration-500 placeholder:text-gray-300 font-serif"
+                className="w-full p-4 md:p-6 pb-20 text-2xl md:text-4xl text-[#111] bg-transparent border-b border-gray-300 focus:border-brand-red resize-none outline-none transition-colors duration-500 placeholder:text-gray-300 font-serif"
                 rows={1}
                 placeholder="&quot;My daughter needs financial help for college...&quot;"
                 value={query}
