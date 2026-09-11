@@ -13,7 +13,7 @@ export default function Home() {
     if (!query.trim()) return;
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:8000/api/intent", {
+      const res = await fetch("/api/intent", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query }),
@@ -30,7 +30,7 @@ export default function Home() {
   const handleSubmitApplication = async () => {
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:8000/api/submit", {
+      const res = await fetch("/api/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
