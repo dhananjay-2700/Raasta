@@ -56,7 +56,15 @@ export function useVoiceAssistant({ onTranscriptChange, onTranscriptComplete }: 
 
         const normalized = latestTranscript.toLowerCase();
         // Check for "raasta" in the continuous stream
-        if (normalized.includes('raasta') || normalized.includes('rasta')) {
+        // Web Speech API often misinterprets non-English words. Add phonetic fallbacks:
+        if (
+          normalized.includes('raasta') || 
+          normalized.includes('rasta') || 
+          normalized.includes('pasta') ||
+          normalized.includes('roster') ||
+          normalized.includes('raster') ||
+          normalized.includes('rust a')
+        ) {
           handleWakeWordDetected(recognition);
         }
       };

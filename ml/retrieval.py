@@ -25,6 +25,11 @@ class SchemeRetriever:
         with open(self.schemes_file, 'r', encoding='utf-8') as f:
             self.schemes_data = json.load(f)
             
+        if not self.schemes_data:
+            self.tfidf_matrix = None
+            return
+            
+        self.documents = []
         for scheme in self.schemes_data:
             doc_parts = [
                 scheme.get("name", ""),
@@ -123,11 +128,11 @@ class SchemeRetriever:
         elif not isinstance(input_query, str) and input_query.intent == "unknown" and len(input_query.entities) == 0:
             is_vague = True
             
-        if is_vague:
+        if is_vague or self.tfidf_matrix is None:
             return RetrievalResponse(
                 query=query_text if isinstance(input_query, str) else input_query.summary,
                 results=[],
-                status="insufficient_information"
+                status="insufficient_information" if is_vague else "no_relevant_scheme"
             )
             
         # 1. TF-IDF Text Similarity

@@ -6,17 +6,7 @@ import time
 import asyncio
 from contextlib import asynccontextmanager
 
-from backend.vosk_listener import start_listener_thread, wake_word_queue
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Start the background vosk listener
-    loop = asyncio.get_running_loop()
-    start_listener_thread(loop)
-    yield
-    # Clean up can happen here
-
-app = FastAPI(title="RAASTA API", lifespan=lifespan)
+app = FastAPI(title="RAASTA API")
 
 @app.get("/health")
 async def health_check():
@@ -110,20 +100,7 @@ async def get_journey(journey_id: str):
     }
 
 
-@app.websocket("/api/ws/voice")
-async def voice_websocket(websocket: WebSocket):
-    await websocket.accept()
-    print("WebSocket connected for voice trigger")
-    try:
-        while True:
-            # Wait for an event from the listener queue
-            event = await wake_word_queue.get()
-            # Send to frontend
-            await websocket.send_json(event)
-    except WebSocketDisconnect:
-        print("WebSocket disconnected")
-    except Exception as e:
-        print(f"WebSocket error: {e}")
+
 
 from ml.pipeline import run_pipeline
 from ml.pipeline_schemas import PipelineRequest, PipelineResponse
