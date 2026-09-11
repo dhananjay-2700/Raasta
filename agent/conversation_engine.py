@@ -4,6 +4,8 @@ import logging
 from typing import Dict, Any, Optional
 
 from agent.journey_context import JourneyContext
+from agent.brain.brain import RAASTABrain
+from agent.brain.schemas import BrainDecision
 from ml.pipeline import RAASTAPipeline
 from ml.pipeline_schemas import PipelineRequest
 from ml.nba_schemas import ApplicationState
@@ -58,10 +60,15 @@ class ConversationTurnResponse:
 class RAASTAConversationEngine:
     """
     Stateful conversational orchestrator for RAASTA.
-    Coordinates citizen voice dialogue with the authoritative RAASTA ML pipeline.
+    Coordinates citizen voice dialogue with the RAASTA Brain and authoritative ML pipeline.
     """
-    def __init__(self, pipeline: Optional[RAASTAPipeline] = None):
+    def __init__(
+        self,
+        pipeline: Optional[RAASTAPipeline] = None,
+        brain: Optional[RAASTABrain] = None
+    ):
         self.pipeline = pipeline or RAASTAPipeline()
+        self.brain = brain or RAASTABrain()
 
     def process_turn(self, citizen_text: str, journey: Optional[JourneyContext] = None) -> ConversationTurnResponse:
         """
@@ -79,8 +86,11 @@ class RAASTAConversationEngine:
         clean_text = citizen_text.strip()
         normalized_cmd = clean_text.lower().translate(str.maketrans('', '', string.punctuation)).strip()
 
-        # 1. Handle Exit / Cancellation
-        if normalized_cmd in EXIT_COMMANDS:
+        # 1. RAASTA Brain: Conversational Interpretation & Intent Understanding
+        decision = self.brain.interpret_turn(clean_text, journey)
+
+        # Handle Exit / Cancellation
+        if normalized_cmd in EXIT_COMMANDS or decision.is_cancellation:
             journey.record_turn("citizen", clean_text)
             reply = "Ending session. Your journey details are saved. You can resume anytime."
             journey.record_turn("raasta", reply)
@@ -91,10 +101,42 @@ class RAASTAConversationEngine:
                 journey=journey
             )
 
+        # Handle Restart
+        if decision.is_restart:
+            journey.record_turn("citizen", clean_text)
+            journey.current_stage = "understanding"
+            journey.selected_scheme = None
+            journey.known_facts = {}
+            journey.missing_facts = []
+            journey.pending_field = None
+            reply = "Starting over. How can I help you today with government schemes?"
+            journey.record_turn("raasta", reply)
+            return ConversationTurnResponse(
+                spoken_text=reply,
+                should_continue=True,
+                journey=journey
+            )
+
         journey.record_turn("citizen", clean_text)
 
-        # 2. Handle Pending Question Resolution
-        if journey.pending_field:
+        # 2. Apply Brain-proposed facts through deterministic validation
+        accepted_facts, rejected_facts = self.brain.apply_decision_to_journey(decision, journey)
+
+        # 3. Handle Explanation, "I don't know", or Uncertainty directly
+        if decision.is_explanation_request or decision.is_dont_know or decision.is_uncertain:
+            current_query = " ".join([t["text"] for t in journey.conversation_history if t["role"] == "citizen"])
+            pipe_res = self.pipeline.run(PipelineRequest(query=current_query, application_state=ApplicationState()))
+            spoken_response = self.brain.synthesize_response(clean_text, pipe_res, journey, decision)
+            journey.record_turn("raasta", spoken_response)
+            journey.last_question = spoken_response
+            return ConversationTurnResponse(
+                spoken_text=spoken_response,
+                should_continue=True,
+                journey=journey
+            )
+
+        # 4. Fallback deterministic pending field resolution if pending field is still unresolved
+        if journey.pending_field and journey.pending_field not in journey.known_facts:
             field = journey.pending_field
             resolved_value = self._resolve_pending_field(field, clean_text)
 
@@ -110,6 +152,7 @@ class RAASTAConversationEngine:
                 for k, v in extra_facts.items():
                     if k not in journey.known_facts:
                         journey.add_fact(k, v, source="Citizen Conversation")
+                        accepted_facts.append(f"{k} as {v}")
                         logger.info(f"Salvaged out-of-order fact '{k}' = {v}")
 
                 field_label = field.replace('_', ' ')
@@ -117,8 +160,8 @@ class RAASTAConversationEngine:
                     field,
                     f"Could you please provide your {field_label}?"
                 )
-                if extra_facts:
-                    ack = ", ".join(f"{k.replace('_', ' ')} as {v}" for k, v in extra_facts.items())
+                if accepted_facts:
+                    ack = ", ".join(f.replace('_', ' ') for f in accepted_facts)
                     spoken_response = f"I noted your {ack}. However, to check your eligibility, {reprompt}"
                 else:
                     spoken_response = f"I didn't quite get a valid {field_label}. {reprompt}"
@@ -131,7 +174,7 @@ class RAASTAConversationEngine:
                     journey=journey
                 )
 
-        # 3. Construct Unified Enriched Query for RAASTA ML Pipeline
+        # 5. Construct Unified Enriched Query for RAASTA ML Pipeline
         accumulated_query_parts = []
         for turn in journey.conversation_history:
             if turn["role"] == "citizen":
@@ -151,7 +194,7 @@ class RAASTAConversationEngine:
 
         full_query = " ".join(accumulated_query_parts)
 
-        # 4. Run authoritative RAASTA ML Pipeline
+        # 6. Run authoritative RAASTA ML Pipeline
         req = PipelineRequest(
             query=full_query,
             application_state=ApplicationState(
@@ -164,14 +207,21 @@ class RAASTAConversationEngine:
 
         pipeline_res = self.pipeline.run(req)
 
-        # 5. Absorb Pipeline Extraction Facts into Journey Context
+        # 7. Absorb Pipeline Extraction Facts into Journey Context
+        if pipeline_res.selected_scheme:
+            journey.selected_scheme = pipeline_res.selected_scheme
+
         if pipeline_res.extraction and pipeline_res.extraction.entities:
             for k, entity in pipeline_res.extraction.entities.items():
                 if entity.value is not None and k not in journey.known_facts:
                     journey.add_fact(k, entity.value, source=entity.source or "Citizen Conversation")
 
-        # 6. Generate Natural Conversational Response
-        spoken_response = self._synthesize_response(pipeline_res, journey)
+        # 8. Generate Natural Conversational Response via Brain (grounded strictly in pipeline)
+        try:
+            spoken_response = self.brain.synthesize_response(clean_text, pipeline_res, journey, decision)
+        except Exception as e:
+            logger.warning(f"Brain synthesis failed ({e}), falling back to deterministic response")
+            spoken_response = self._synthesize_response(pipeline_res, journey)
 
         journey.record_turn("raasta", spoken_response)
         journey.last_question = spoken_response
