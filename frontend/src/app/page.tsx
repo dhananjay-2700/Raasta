@@ -189,49 +189,27 @@ export default function Home() {
     }
   };
 
+  const { voiceState: newVoiceState, error: voiceError, forceWakeWord } = useVoiceAssistant({
+    onTranscriptChange: (text) => {
+      setQuery(text);
+    },
+    onTranscriptComplete: (text) => {
+      setQuery(text);
+      handleSearchSubmit(text);
+    }
+  });
+
   useEffect(() => {
-    // Connect to WebSocket for Vosk wake word detection
-    const ws = new WebSocket("ws://localhost:8000/api/ws/voice");
-    
-    ws.onopen = () => console.log("[VOICE] WebSocket connected to backend.");
-    ws.onerror = (e) => console.warn("[VOICE] WebSocket error (often safe to ignore during Strict Mode unmounts):", e);
-    ws.onclose = () => console.log("[VOICE] WebSocket disconnected. Refresh to reconnect.");
-
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (data.event === "wake_word_detected") {
-          setSiriActive(true);
-          setVoiceState("WAKE_DETECTED");
-          setQuery("Listening to your voice...");
-          setTimeout(() => setVoiceState("LISTENING"), 500); // Visual transition
-        } else if (data.event === "transcript") {
-          setSiriActive(false);
-          const transcriptText = data.text;
-          
-          setQuery((prev) => {
-            const newQuery = prev === "Listening to your voice..." 
-              ? transcriptText 
-              : prev + " " + transcriptText;
-            
-            // Automatically submit after state update
-            setTimeout(() => {
-              setVoiceState("PROCESSING");
-              handleSearchSubmit(newQuery);
-            }, 100);
-            
-            return newQuery;
-          });
-        }
-      } catch (e) {
-        console.error("Error parsing WS message", e);
+    setVoiceState(newVoiceState);
+    if (newVoiceState === 'ACTIVATING' || newVoiceState === 'LISTENING') {
+      setSiriActive(true);
+      if (newVoiceState === 'ACTIVATING' && query === "") {
+        setQuery("Listening to your voice...");
       }
-    };
-
-    return () => {
-      ws.close();
-    };
-  }, [router, updateState, state]);
+    } else {
+      setSiriActive(false);
+    }
+  }, [newVoiceState]);
 
   // 1. Canvas Sequence Scroll hook
   const canvasContainerRef = useRef<HTMLDivElement>(null);
@@ -286,7 +264,7 @@ export default function Home() {
       </div>
 
       {/* 2. Hero Parallax Section */}
-      <div ref={heroContainerRef} className="h-[200vh] w-full relative z-30 bg-[#FAF4EB]">
+      <div ref={heroContainerRef} className="h-[200vh] w-full relative z-30 bg-[#FAF4EB] -mt-[100vh]">
         <div className="sticky top-0 h-[100svh] w-full overflow-hidden">
           
           <div className="absolute inset-0 z-0">
