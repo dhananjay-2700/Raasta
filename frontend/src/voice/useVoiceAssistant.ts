@@ -99,7 +99,24 @@ export function useVoiceAssistant({ onTranscriptChange, onTranscriptComplete }: 
   useEffect(() => {
     if (voiceState === 'IDLE') {
       isTransitioningRef.current = false;
-      startWakeWordListener();
+      
+      // Explicitly request microphone permission first to force the browser prompt
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ audio: true })
+          .then((stream) => {
+            // Permission granted, close the stream we just opened to free the mic
+            stream.getTracks().forEach(track => track.stop());
+            // Now start the SpeechRecognition which will no longer be blocked
+            startWakeWordListener();
+          })
+          .catch((err) => {
+            console.error("Microphone access denied or not available:", err);
+            setError("Microphone permission required for voice assistant.");
+          });
+      } else {
+        // Fallback if getUserMedia is not supported (unlikely in modern browsers)
+        startWakeWordListener();
+      }
     } else {
       // We are no longer IDLE (e.g. LISTENING to a command). 
       // Stop the wake word listener to avoid overlapping microphone captures.
