@@ -241,6 +241,11 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-brand-red selection:text-white pb-32">
+      {voiceError && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 bg-red-500 text-white px-6 py-3 rounded-full z-[200] shadow-xl text-sm font-medium animate-fade-in-up">
+          {voiceError}
+        </div>
+      )}
       <SiriOrb active={siriActive} text="Listening..." />
       
       {/* 1. Canvas Sequence Section */}
