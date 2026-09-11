@@ -1,173 +1,202 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { useJourney } from "@/context/JourneyContext";
+import { EvidenceCard } from "@/components/Cards/EvidenceCard";
+import { GuidanceCard } from "@/components/Cards/GuidanceCard";
+
+const AbstractArt = () => (
+  <svg viewBox="0 0 800 800" className="w-full h-full opacity-0 animate-fade-in" style={{ animationDelay: '0.3s', animationFillMode: 'forwards' }}>
+    {/* Red Blob (Turban) */}
+    <path 
+      d="M250,200 C350,100 550,150 650,250 C750,350 700,500 550,550 C400,600 300,500 200,450 C100,400 150,300 250,200 Z" 
+      fill="var(--color-brand-red)" 
+      className="opacity-0 animate-blob-in" 
+      style={{ animationDelay: '0.5s', transformOrigin: 'center' }} 
+    />
+    {/* Yellow Blob (Lower body/accent) */}
+    <path 
+      d="M300,600 C450,550 550,600 650,700 C750,800 450,850 300,750 C150,650 150,650 300,600 Z" 
+      fill="var(--color-brand-yellow)" 
+      className="opacity-0 animate-blob-in" 
+      style={{ animationDelay: '0.7s', transformOrigin: 'center' }} 
+    />
+    {/* Abstract continuous face line */}
+    <path 
+      d="M50,750 C100,650 200,750 300,650 C400,550 350,450 400,350 C450,250 550,300 600,400 C620,450 550,450 500,500 C450,550 400,600 500,650 C600,700 700,600 650,500 C600,400 550,300 450,200 C350,100 250,150 300,250 C320,300 300,350 400,450" 
+      fill="none" 
+      stroke="#111" 
+      strokeWidth="4" 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+      className="animate-draw-line"
+    />
+    {/* Mustache flourish */}
+    <path 
+      d="M350,550 C380,530 420,550 450,550 C480,550 520,530 550,550 C600,600 500,620 450,580 C400,620 300,600 350,550 Z" 
+      fill="none" 
+      stroke="#111" 
+      strokeWidth="4" 
+      strokeLinecap="round" 
+      strokeLinejoin="round"
+      className="animate-draw-line"
+      style={{ animationDelay: '1s' }}
+    />
+  </svg>
+);
 
 export default function Home() {
+  const router = useRouter();
+  const { state, updateState } = useJourney();
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
-  const [intentData, setIntentData] = useState<any>(null);
-  const [formCompleted, setFormCompleted] = useState(false);
-  const [submissionData, setSubmissionData] = useState<any>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSearchSubmit = async () => {
     if (!query.trim()) return;
     setLoading(true);
-    try {
-      const res = await fetch("/api/intent", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query }),
+    
+    // Simulate API delay and intent parsing
+    setTimeout(() => {
+      updateState({
+        intent: query,
+        lifeEvent: "Higher education",
+        need: "Financial assistance",
+        person: "Daughter"
       });
-      const data = await res.json();
-      setIntentData(data);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
+      router.push("/journey/understand");
+    }, 1000);
   };
 
-  const handleSubmitApplication = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/submit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          service_id: intentData?.matched_service_id,
-          data: intentData?.extracted_entities,
-        }),
-      });
-      const data = await res.json();
-      setSubmissionData(data);
-      setFormCompleted(true);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
+  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setQuery(e.target.value);
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
   };
-
-  if (formCompleted && submissionData) {
-    return (
-      <main className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
-        <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8 text-center">
-          <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
-          </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Application Submitted!</h2>
-          <p className="text-gray-600 mb-6">Your official Reference ID is:</p>
-          <div className="bg-blue-50 text-blue-800 font-mono text-xl font-bold py-3 px-6 rounded-lg mb-6">
-            {submissionData.application_id}
-          </div>
-          <button onClick={() => window.location.reload()} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg transition-colors">
-            Return Home
-          </button>
-        </div>
-      </main>
-    );
-  }
-
-  if (intentData) {
-    return (
-      <main className="min-h-screen bg-gray-50 p-6 flex justify-center">
-        <div className="max-w-3xl w-full">
-          <button onClick={() => setIntentData(null)} className="flex items-center text-gray-500 hover:text-gray-800 mb-6">
-            <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-            Back
-          </button>
-          
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">{intentData.service_name}</h1>
-          <p className="text-gray-600 mb-6">Department of Social Justice and Empowerment</p>
-
-          <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg mb-8 shadow-sm">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" /></svg>
-              </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-blue-800">Next Best Action</h3>
-                <div className="mt-2 text-sm text-blue-700">
-                  <p>Review the auto-filled application below and click submit.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
-              <h2 className="text-lg font-semibold text-gray-800">Application Details</h2>
-            </div>
-            <div className="p-6 space-y-6">
-              {Object.keys(intentData.extracted_entities).map((key) => {
-                const entity = intentData.extracted_entities[key];
-                return (
-                  <div key={key}>
-                    <label className="block text-sm font-medium text-gray-700 mb-1 capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</label>
-                    <input 
-                      type="text" 
-                      defaultValue={entity.value}
-                      className="w-full border-gray-300 rounded-lg shadow-sm bg-gray-50 focus:border-blue-500 focus:ring-blue-500 px-4 py-2 border" 
-                      readOnly 
-                    />
-                    <div className="mt-1 flex items-center text-xs text-green-600 font-medium">
-                      <svg className="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                      Provenance: Extracted from {entity.source}
-                    </div>
-                  </div>
-                );
-              })}
-              
-              <button 
-                onClick={handleSubmitApplication}
-                disabled={loading}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg transition-colors mt-4 disabled:opacity-50"
-              >
-                {loading ? "Submitting..." : "Submit Application"}
-              </button>
-            </div>
-          </div>
-        </div>
-      </main>
-    );
-  }
 
   return (
-    <main className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6">
-      <div className="max-w-2xl w-full space-y-8">
-        <div className="text-center">
-          <div className="inline-block bg-gradient-to-r from-blue-600 to-indigo-600 text-transparent bg-clip-text text-5xl font-extrabold mb-4">RAASTA</div>
-          <p className="text-xl text-gray-600">One conversation. Every government journey.</p>
-        </div>
-
-        <div className="bg-white p-8 rounded-2xl shadow-lg border border-gray-100">
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">What happened?</h2>
-          <p className="text-gray-500 mb-6">Describe your situation in normal language, and RAASTA will figure out the rest.</p>
-          
-          <div className="relative">
-            <textarea
-              className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 pr-12 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none h-32"
-              placeholder="e.g., My daughter just got admission to college, but we can't afford the fees."
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-            ></textarea>
-            <button 
-              onClick={handleSearchSubmit}
-              disabled={loading || !query.trim()}
-              className="absolute bottom-4 right-4 p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
-            >
-              {loading ? (
-                <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-              ) : (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-              )}
-            </button>
+    <div className="min-h-screen bg-background text-foreground overflow-hidden pb-32">
+      {/* Hero Section */}
+      <div className="relative min-h-[90vh] flex flex-col items-center justify-center px-6">
+        
+        {/* Background Abstract Art */}
+        <div className="absolute inset-0 z-0 flex items-center justify-center opacity-80 pointer-events-none">
+          <div className="w-[600px] h-[600px] md:w-[800px] md:h-[800px] max-w-full">
+            <AbstractArt />
           </div>
         </div>
+
+        {/* Content */}
+        <div className="relative z-10 w-full max-w-5xl mx-auto flex flex-col items-center text-center space-y-12">
+          
+          <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl text-[#111] leading-tight tracking-tight opacity-0 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+            One Conversation.<br/>
+            <span className="italic font-light text-gray-700">Every Journey.</span>
+          </h1>
+          
+          <p className="text-xl md:text-2xl text-gray-800 font-light max-w-2xl opacity-0 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+            A new standard for civic interaction. Tell us what you need in your own words.
+          </p>
+
+          {/* Luxury Input */}
+          <div className="w-full max-w-3xl pt-8 opacity-0 animate-fade-in-up" style={{ animationDelay: '0.6s' }}>
+            <div className="relative group bg-white/60 backdrop-blur-xl border border-white/50 shadow-2xl rounded-3xl p-2 transition-all duration-500 hover:shadow-3xl hover:bg-white/80 focus-within:bg-white/90 focus-within:shadow-3xl">
+              <textarea
+                ref={textareaRef}
+                className="w-full p-6 text-2xl md:text-3xl bg-transparent border-none resize-none outline-none placeholder:text-gray-400 font-serif"
+                rows={1}
+                placeholder="What do you need help with?"
+                value={query}
+                onChange={handleTextareaChange}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSearchSubmit();
+                  }
+                }}
+              />
+              
+              <div className="flex justify-end p-4">
+                <button 
+                  onClick={handleSearchSubmit}
+                  disabled={loading || !query.trim()}
+                  className="w-16 h-16 rounded-full bg-brand-red text-white flex items-center justify-center hover:scale-105 transition-transform disabled:opacity-50 disabled:scale-100 shadow-xl"
+                >
+                  {loading ? (
+                    <svg className="animate-spin h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  ) : (
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div>
       </div>
-    </main>
+
+      {/* Editorial Content Section */}
+      <div className="max-w-6xl mx-auto px-6 py-24 space-y-32 relative z-10">
+        
+        {/* Active Journey Demo */}
+        {state.application && (
+          <div className="flex flex-col md:flex-row items-center justify-between p-12 bg-white/50 backdrop-blur-md rounded-[3rem] border border-white/40 shadow-xl opacity-0 animate-fade-in-up" style={{ animationDelay: '0.8s' }}>
+            <div className="space-y-4 text-center md:text-left">
+              <p className="text-sm font-bold text-brand-red tracking-widest uppercase">Continue</p>
+              <h3 className="font-serif text-3xl text-gray-900">Education Financial Assistance</h3>
+              <p className="text-gray-500 font-light">Application under review</p>
+            </div>
+            <button 
+              onClick={() => router.push(`/journey/${state.application.id}`)}
+              className="mt-8 md:mt-0 px-10 py-5 bg-[#111] text-white font-medium rounded-full hover:bg-black transition-colors tracking-wide text-lg shadow-lg"
+            >
+              Resume Journey
+            </button>
+          </div>
+        )}
+
+        {/* Feature 1 */}
+        <div className="grid md:grid-cols-2 gap-16 items-center">
+          <div className="space-y-8 order-2 md:order-1">
+            <h2 className="font-serif text-4xl md:text-6xl leading-tight text-[#111]">No Jargon. <br/><span className="italic text-gray-500">Just Clarity.</span></h2>
+            <p className="text-xl text-gray-700 font-light leading-relaxed">
+              You don&apos;t need to memorize complex scheme names or navigate confusing bureaucratic structures. Simply describe your situation, and we translate it into the exact requirements you need.
+            </p>
+          </div>
+          <div className="order-1 md:order-2 bg-white/50 backdrop-blur-sm p-16 rounded-[3rem] border border-white/40 shadow-2xl flex items-center justify-center transform hover:-translate-y-2 transition-transform duration-500">
+             <p className="font-serif text-3xl text-center text-gray-800 italic leading-relaxed">
+              &quot;My daughter needs financial help for college.&quot;
+             </p>
+          </div>
+        </div>
+
+        {/* Feature 2 */}
+        <div className="grid md:grid-cols-2 gap-16 items-center">
+          <div className="bg-white/50 backdrop-blur-sm p-12 rounded-[3rem] border border-white/40 shadow-2xl transform hover:-translate-y-2 transition-transform duration-500">
+            <div className="space-y-6">
+              <EvidenceCard title="Verified Data">
+                Official rules and requirements directly sourced from government portals.
+              </EvidenceCard>
+              <GuidanceCard>
+                RAASTA&apos;s intelligent interpretation to effortlessly guide your journey.
+              </GuidanceCard>
+            </div>
+          </div>
+          <div className="space-y-8 pl-0 md:pl-12">
+            <h2 className="font-serif text-4xl md:text-6xl leading-tight text-[#111]">Truth First. <br/><span className="italic text-gray-500">Always Verified.</span></h2>
+            <p className="text-xl text-gray-700 font-light leading-relaxed">
+              We separate AI guidance from ground truth. Every piece of advice is clearly demarcated from official government requirements, ensuring you always know what is absolute.
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </div>
   );
 }
