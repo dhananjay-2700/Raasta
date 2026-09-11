@@ -57,3 +57,20 @@ async def submit_application(req: FormSubmissionRequest):
         "application_id": app_id,
         "estimated_completion": "7-15 days"
     }
+
+from ml.pipeline import run_pipeline
+from ml.pipeline_schemas import PipelineRequest, PipelineResponse
+
+@app.post("/api/raasta/analyze", response_model=PipelineResponse)
+async def analyze_request(req: PipelineRequest):
+    try:
+        response = run_pipeline(req)
+        # If the pipeline itself caught a known error, we still return the PipelineResponse,
+        # but if it threw something unexpected we can return a 500.
+        if response.status == "error":
+            raise HTTPException(status_code=500, detail=response.error_message)
+        return response
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

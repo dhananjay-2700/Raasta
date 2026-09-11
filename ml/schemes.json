@@ -1,0 +1,823 @@
+[
+  {
+    "scheme_id": "PM_USP_CSS",
+    "name": "PM-USP Central Sector Scheme of Scholarship for College and University Students",
+    "department": "Department of Higher Education",
+    "category": "education",
+    "description": "Financial assistance to meritorious students from low-income families to meet a part of their day-to-day expenses while pursuing higher studies.",
+    "target_problems": [
+      "Cannot afford college fees despite good marks",
+      "Need financial support for university education"
+    ],
+    "eligibility": {
+      "rules": [
+        {
+          "field": "class_12_percentile",
+          "operator": ">=",
+          "value": 80,
+          "description": "Must have secured marks above the 80th percentile in Class XII board exams.",
+          "source_reference": "https://scholarships.gov.in"
+        },
+        {
+          "field": "annual_income",
+          "operator": "<=",
+          "value": 450000,
+          "description": "Annual family income must not exceed ₹4.5 lakh.",
+          "source_reference": "https://scholarships.gov.in"
+        },
+        {
+          "field": "is_regular_course",
+          "operator": "==",
+          "value": true,
+          "description": "Must be pursuing a regular degree course.",
+          "source_reference": "https://scholarships.gov.in"
+        },
+        {
+          "field": "receiving_other_scholarship",
+          "operator": "==",
+          "value": false,
+          "description": "Must not be receiving any other scholarship.",
+          "source_reference": "https://scholarships.gov.in"
+        }
+      ]
+    },
+    "required_documents": [
+      {
+        "name": "Aadhaar Card",
+        "purpose": "Identity verification",
+        "source_reference": "https://scholarships.gov.in"
+      },
+      {
+        "name": "Income Certificate",
+        "purpose": "Proof of family income",
+        "source_reference": "https://scholarships.gov.in"
+      },
+      {
+        "name": "Class XII Marksheet",
+        "purpose": "Proof of academic merit",
+        "source_reference": "https://scholarships.gov.in"
+      }
+    ],
+    "application_fields": [
+      "fullName",
+      "aadhaar_number",
+      "annual_income",
+      "class_12_percentile",
+      "is_regular_course",
+      "receiving_other_scholarship"
+    ],
+    "evidence": [
+      {
+        "title": "PM-USP Central Sector Scheme Guidelines",
+        "source_name": "Ministry of Education",
+        "source_url": "https://scholarships.gov.in",
+        "reference": "Eligibility criteria section detailing 80th percentile and 4.5 lakh income limit."
+      }
+    ],
+    "retrieval": {
+      "keywords": [
+        "scholarship",
+        "college",
+        "university",
+        "merit",
+        "undergraduate",
+        "higher education"
+      ],
+      "example_queries": [
+        "I scored 85% in 12th but can't pay for my BSc",
+        "Is there any scholarship for college students with low income?",
+        "My daughter got admission to university but we cannot afford the fees",
+        "Financial help for undergraduate degree"
+      ]
+    }
+  },
+  {
+    "scheme_id": "PM_YASASVI_TCE",
+    "name": "PM YASASVI Top Class Education",
+    "department": "Ministry of Social Justice and Empowerment",
+    "category": "education",
+    "description": "Scholarships for students belonging to OBC, EBC, and DNT categories studying in Top Class Schools and Colleges.",
+    "target_problems": [
+      "Cannot afford school fees for higher classes",
+      "Need help paying for college tuition and hostel"
+    ],
+    "eligibility": {
+      "rules": [
+        {
+          "field": "social_category",
+          "operator": "in",
+          "value": [
+            "OBC",
+            "EBC",
+            "DNT"
+          ],
+          "description": "Must belong to Other Backward Classes, Economically Backward Classes, or Denotified Tribes.",
+          "source_reference": "https://myscheme.gov.in"
+        },
+        {
+          "field": "annual_income",
+          "operator": "<=",
+          "value": 250000,
+          "description": "Total annual family income must be less than ₹2.5 lakhs.",
+          "source_reference": "https://dosje.gov.in"
+        }
+      ]
+    },
+    "required_documents": [
+      {
+        "name": "Caste/Category Certificate",
+        "purpose": "To verify OBC/EBC/DNT status",
+        "source_reference": "https://socialjustice.gov.in"
+      },
+      {
+        "name": "Income Certificate",
+        "purpose": "To verify income limit",
+        "source_reference": "https://socialjustice.gov.in"
+      }
+    ],
+    "application_fields": [
+      "fullName",
+      "aadhaar_number",
+      "social_category",
+      "annual_income",
+      "education_level"
+    ],
+    "evidence": [
+      {
+        "title": "PM YASASVI Scheme Details",
+        "source_name": "Ministry of Social Justice and Empowerment",
+        "source_url": "https://socialjustice.gov.in",
+        "reference": "Eligibility criteria for Top Class School and College education."
+      }
+    ],
+    "retrieval": {
+      "keywords": [
+        "OBC",
+        "EBC",
+        "DNT",
+        "school fees",
+        "college fees",
+        "hostel",
+        "YASASVI"
+      ],
+      "example_queries": [
+        "I am from OBC category and need help with class 11 fees",
+        "Financial support for EBC students in college",
+        "How to get scholarship for top class school?",
+        "Scholarship for nomadic tribe student"
+      ]
+    }
+  },
+  {
+    "scheme_id": "AB_PM_JAY",
+    "name": "Ayushman Bharat PM-JAY",
+    "department": "National Health Authority",
+    "category": "healthcare",
+    "description": "Health insurance cover of up to ₹5 lakh per family per year for secondary and tertiary care hospitalization to poor and vulnerable families.",
+    "target_problems": [
+      "Need money for hospital operation",
+      "Cannot afford medical treatment or surgery"
+    ],
+    "eligibility": {
+      "rules": [
+        {
+          "field": "is_secc_2011_deprived",
+          "operator": "==",
+          "value": "verification_required",
+          "description": "Must belong to poor/vulnerable families identified in the SECC 2011 database based on deprivation or occupational criteria.",
+          "source_reference": "https://pmjay.gov.in"
+        }
+      ]
+    },
+    "required_documents": [
+      {
+        "name": "Aadhaar Card",
+        "purpose": "Identity verification (e-KYC)",
+        "source_reference": "https://pmjay.gov.in"
+      },
+      {
+        "name": "Ration Card",
+        "purpose": "Family identification",
+        "source_reference": "https://pmjay.gov.in"
+      }
+    ],
+    "application_fields": [
+      "fullName",
+      "aadhaar_number",
+      "ration_card_number",
+      "is_secc_2011_deprived"
+    ],
+    "evidence": [
+      {
+        "title": "PM-JAY Eligibility Criteria",
+        "source_name": "National Health Authority",
+        "source_url": "https://pmjay.gov.in",
+        "reference": "SECC 2011 based eligibility for rural and urban poor."
+      }
+    ],
+    "retrieval": {
+      "keywords": [
+        "health insurance",
+        "hospital",
+        "surgery",
+        "medical treatment",
+        "PMJAY",
+        "Ayushman card"
+      ],
+      "example_queries": [
+        "My husband needs a heart surgery but we are poor",
+        "How to get free medical treatment in hospital?",
+        "Health insurance for daily wage worker",
+        "I need Ayushman card for hospital admission"
+      ]
+    }
+  },
+  {
+    "scheme_id": "AB_PM_JAY_70_PLUS",
+    "name": "Ayushman Bharat PM-JAY Senior Citizen 70+",
+    "department": "National Health Authority",
+    "category": "healthcare",
+    "description": "Universal health insurance cover of up to ₹5 lakh per year for all senior citizens aged 70 years and above.",
+    "target_problems": [
+      "Health insurance for elderly",
+      "Medical cover for senior citizens over 70"
+    ],
+    "eligibility": {
+      "rules": [
+        {
+          "field": "age",
+          "operator": ">=",
+          "value": 70,
+          "description": "Must be 70 years of age or older.",
+          "source_reference": "https://pmindia.gov.in"
+        }
+      ]
+    },
+    "required_documents": [
+      {
+        "name": "Aadhaar Card",
+        "purpose": "Age and identity verification (e-KYC)",
+        "source_reference": "https://pmjay.gov.in"
+      }
+    ],
+    "application_fields": [
+      "fullName",
+      "aadhaar_number",
+      "age"
+    ],
+    "evidence": [
+      {
+        "title": "Approval of PM-JAY expansion for 70+ citizens",
+        "source_name": "PM India",
+        "source_url": "https://pmindia.gov.in",
+        "reference": "All senior citizens aged 70+ are eligible irrespective of income."
+      }
+    ],
+    "retrieval": {
+      "keywords": [
+        "senior citizen",
+        "70 years",
+        "elderly",
+        "health insurance",
+        "Ayushman Vay Vandana"
+      ],
+      "example_queries": [
+        "My 75 year old father needs health insurance",
+        "Is there any medical scheme for old people?",
+        "Ayushman card for 72 year old mother",
+        "Free hospital treatment for senior citizens"
+      ]
+    }
+  },
+  {
+    "scheme_id": "PM_KISAN",
+    "name": "PM-KISAN Samman Nidhi",
+    "department": "Department of Agriculture and Farmers Welfare",
+    "category": "agriculture",
+    "description": "Income support of ₹6,000 per year in three equal installments to all landholding farmer families.",
+    "target_problems": [
+      "Need financial support for farming",
+      "Agricultural income assistance"
+    ],
+    "eligibility": {
+      "rules": [
+        {
+          "field": "owns_cultivable_land",
+          "operator": "==",
+          "value": true,
+          "description": "Farmer family must own cultivable land in their names.",
+          "source_reference": "https://pmkisan.gov.in"
+        },
+        {
+          "field": "is_institutional_landholder",
+          "operator": "==",
+          "value": false,
+          "description": "Must not be an institutional landholder.",
+          "source_reference": "https://pmkisan.gov.in"
+        },
+        {
+          "field": "is_government_employee",
+          "operator": "==",
+          "value": false,
+          "description": "Must not be a serving or retired government employee.",
+          "source_reference": "https://pmkisan.gov.in"
+        },
+        {
+          "field": "pension_amount",
+          "operator": "<",
+          "value": 10000,
+          "description": "Pensioners must have a monthly pension of less than ₹10,000.",
+          "source_reference": "https://pmkisan.gov.in"
+        }
+      ]
+    },
+    "required_documents": [
+      {
+        "name": "Land Ownership Records",
+        "purpose": "Proof of cultivable land ownership",
+        "source_reference": "https://pmkisan.gov.in"
+      },
+      {
+        "name": "Aadhaar Card",
+        "purpose": "Identity and bank linkage",
+        "source_reference": "https://pmkisan.gov.in"
+      },
+      {
+        "name": "Bank Account Details",
+        "purpose": "Direct Benefit Transfer (DBT)",
+        "source_reference": "https://pmkisan.gov.in"
+      }
+    ],
+    "application_fields": [
+      "fullName",
+      "aadhaar_number",
+      "owns_cultivable_land",
+      "is_institutional_landholder",
+      "is_government_employee",
+      "pension_amount"
+    ],
+    "evidence": [
+      {
+        "title": "PM-KISAN Eligibility and Exclusions",
+        "source_name": "Department of Agriculture and Farmers Welfare",
+        "source_url": "https://pmkisan.gov.in",
+        "reference": "Detailed guidelines on eligible landholding families and excluded categories."
+      }
+    ],
+    "retrieval": {
+      "keywords": [
+        "farmer",
+        "agriculture",
+        "land",
+        "financial support",
+        "PM KISAN",
+        "kisan samman"
+      ],
+      "example_queries": [
+        "I am a farmer with small land, how to get 6000 rupees?",
+        "Financial help for buying seeds and fertilizer",
+        "PM Kisan scheme eligibility",
+        "Income support for agricultural family"
+      ]
+    }
+  },
+  {
+    "scheme_id": "PMAY_U_2",
+    "name": "PMAY-U 2.0 (Pradhan Mantri Awas Yojana-Urban)",
+    "department": "Ministry of Housing and Urban Affairs",
+    "category": "housing",
+    "description": "Financial assistance to urban poor and middle-class families for constructing, purchasing, or renting a pucca house.",
+    "target_problems": [
+      "Do not own a house",
+      "Living in kucha house or slum in city",
+      "Need help to build a home"
+    ],
+    "eligibility": {
+      "rules": [
+        {
+          "field": "owns_pucca_house",
+          "operator": "==",
+          "value": false,
+          "description": "The applicant's family must not own a pucca house anywhere in India.",
+          "source_reference": "https://pmay-urban.gov.in"
+        },
+        {
+          "field": "annual_income",
+          "operator": "<=",
+          "value": 900000,
+          "description": "Annual household income must not exceed ₹9 lakh (up to MIG category limits).",
+          "source_reference": "https://pmay-urban.gov.in"
+        }
+      ]
+    },
+    "required_documents": [
+      {
+        "name": "Aadhaar Card",
+        "purpose": "Identity verification",
+        "source_reference": "https://pmay-urban.gov.in"
+      },
+      {
+        "name": "Income Proof / Affidavit",
+        "purpose": "Verify income category (EWS/LIG/MIG)",
+        "source_reference": "https://pmay-urban.gov.in"
+      },
+      {
+        "name": "Affidavit of No Pucca House",
+        "purpose": "Proof of not owning a permanent house",
+        "source_reference": "https://pmay-urban.gov.in"
+      }
+    ],
+    "application_fields": [
+      "fullName",
+      "aadhaar_number",
+      "owns_pucca_house",
+      "annual_income",
+      "family_members"
+    ],
+    "evidence": [
+      {
+        "title": "PMAY-U 2.0 Scheme Details",
+        "source_name": "Ministry of Housing and Urban Affairs",
+        "source_url": "https://pmay-urban.gov.in",
+        "reference": "Eligibility criteria regarding pucca house ownership and income slabs."
+      }
+    ],
+    "retrieval": {
+      "keywords": [
+        "house",
+        "home loan",
+        "construction",
+        "urban",
+        "PMAY",
+        "housing subsidy"
+      ],
+      "example_queries": [
+        "I live in a rented house in the city and want to buy my own home",
+        "Government subsidy for building a house in urban area",
+        "Housing scheme for poor families",
+        "Financial help for EWS home loan"
+      ]
+    }
+  },
+  {
+    "scheme_id": "PMUY_2",
+    "name": "Pradhan Mantri Ujjwala Yojana 2.0",
+    "department": "Ministry of Petroleum and Natural Gas",
+    "category": "welfare",
+    "description": "Provides deposit-free LPG connections to adult women of poor households.",
+    "target_problems": [
+      "Cooking with firewood",
+      "Need a gas cylinder connection"
+    ],
+    "eligibility": {
+      "rules": [
+        {
+          "field": "gender",
+          "operator": "==",
+          "value": "female",
+          "description": "Applicant must be a woman.",
+          "source_reference": "https://www.pmuy.gov.in"
+        },
+        {
+          "field": "age",
+          "operator": ">=",
+          "value": 18,
+          "description": "Applicant must be at least 18 years old.",
+          "source_reference": "https://www.pmuy.gov.in"
+        },
+        {
+          "field": "has_existing_lpg_connection",
+          "operator": "==",
+          "value": false,
+          "description": "No other LPG connection should exist in the same household.",
+          "source_reference": "https://www.pmuy.gov.in"
+        },
+        {
+          "field": "is_vulnerable_category",
+          "operator": "==",
+          "value": "verification_required",
+          "description": "Must belong to SC/ST, PMAY(G), AAY, Forest Dwellers, or other specified poor household categories.",
+          "source_reference": "https://www.pmuy.gov.in"
+        }
+      ]
+    },
+    "required_documents": [
+      {
+        "name": "Aadhaar Card",
+        "purpose": "Identity and address proof",
+        "source_reference": "https://www.pmuy.gov.in"
+      },
+      {
+        "name": "Ration Card",
+        "purpose": "Family composition proof",
+        "source_reference": "https://www.pmuy.gov.in"
+      },
+      {
+        "name": "Bank Account Details",
+        "purpose": "For subsidy transfer",
+        "source_reference": "https://www.pmuy.gov.in"
+      }
+    ],
+    "application_fields": [
+      "fullName",
+      "aadhaar_number",
+      "gender",
+      "age",
+      "has_existing_lpg_connection",
+      "is_vulnerable_category"
+    ],
+    "evidence": [
+      {
+        "title": "PMUY 2.0 Eligibility Criteria",
+        "source_name": "Ministry of Petroleum and Natural Gas",
+        "source_url": "https://www.pmuy.gov.in",
+        "reference": "Target categories, age requirement, and exclusion of households with existing connections."
+      }
+    ],
+    "retrieval": {
+      "keywords": [
+        "LPG",
+        "gas cylinder",
+        "cooking",
+        "smoke",
+        "Ujjwala",
+        "women"
+      ],
+      "example_queries": [
+        "I need a free gas connection for cooking",
+        "How can poor women get an LPG cylinder?",
+        "Ujjwala yojana eligibility for SC family",
+        "We cook with firewood and need a gas stove"
+      ]
+    }
+  },
+  {
+    "scheme_id": "PM_VISHWAKARMA",
+    "name": "PM Vishwakarma",
+    "department": "Ministry of Micro, Small and Medium Enterprises",
+    "category": "livelihood",
+    "description": "Support for traditional artisans and craftspeople through training, modern tools, and collateral-free credit.",
+    "target_problems": [
+      "Need tools for traditional craft",
+      "Artisan looking for business loan",
+      "Want to expand my carpentry/tailoring work"
+    ],
+    "eligibility": {
+      "rules": [
+        {
+          "field": "age",
+          "operator": ">=",
+          "value": 18,
+          "description": "Applicant must be at least 18 years old.",
+          "source_reference": "https://pmvishwakarma.gov.in"
+        },
+        {
+          "field": "is_artisan",
+          "operator": "==",
+          "value": true,
+          "description": "Must be engaged in a traditional trade in the unorganized sector on a self-employment basis.",
+          "source_reference": "https://pmvishwakarma.gov.in"
+        },
+        {
+          "field": "trade_category",
+          "operator": "in",
+          "value": [
+            "carpenter",
+            "boat_maker",
+            "blacksmith",
+            "goldsmith",
+            "potter",
+            "sculptor",
+            "cobbler",
+            "mason",
+            "basket_maker",
+            "doll_maker",
+            "barber",
+            "garland_maker",
+            "washerman",
+            "tailor",
+            "fishing_net_maker",
+            "armourer",
+            "hammer_tool_maker",
+            "locksmith"
+          ],
+          "description": "Must practice one of the 18 identified traditional trades.",
+          "source_reference": "https://pmvishwakarma.gov.in"
+        },
+        {
+          "field": "is_government_employee",
+          "operator": "==",
+          "value": false,
+          "description": "Applicant or family members must not be in government service.",
+          "source_reference": "https://pmvishwakarma.gov.in"
+        }
+      ]
+    },
+    "required_documents": [
+      {
+        "name": "Aadhaar Card",
+        "purpose": "Identity verification",
+        "source_reference": "https://pmvishwakarma.gov.in"
+      },
+      {
+        "name": "Bank Account Details",
+        "purpose": "For loan and stipend disbursement",
+        "source_reference": "https://pmvishwakarma.gov.in"
+      }
+    ],
+    "application_fields": [
+      "fullName",
+      "aadhaar_number",
+      "age",
+      "is_artisan",
+      "trade_category",
+      "is_government_employee"
+    ],
+    "evidence": [
+      {
+        "title": "PM Vishwakarma Eligibility",
+        "source_name": "Ministry of MSME",
+        "source_url": "https://pmvishwakarma.gov.in",
+        "reference": "Lists the 18 trades and family/employment exclusions."
+      }
+    ],
+    "retrieval": {
+      "keywords": [
+        "artisan",
+        "crafts",
+        "carpenter",
+        "tailor",
+        "blacksmith",
+        "tools",
+        "business loan",
+        "Vishwakarma"
+      ],
+      "example_queries": [
+        "I am a tailor and need a loan to buy a new sewing machine",
+        "Government scheme for carpenters to get tools",
+        "Financial help for traditional potters",
+        "I want to expand my barber shop"
+      ]
+    }
+  },
+  {
+    "scheme_id": "PM_SVANIDHI",
+    "name": "PM SVANidhi",
+    "department": "Ministry of Housing and Urban Affairs",
+    "category": "livelihood",
+    "description": "Special micro-credit facility providing affordable working capital loans to street vendors to resume their livelihoods.",
+    "target_problems": [
+      "Street vendor needs working capital",
+      "Need a small loan to restart hawking business"
+    ],
+    "eligibility": {
+      "rules": [
+        {
+          "field": "is_street_vendor",
+          "operator": "==",
+          "value": true,
+          "description": "Must be a street vendor operating in urban/peri-urban areas.",
+          "source_reference": "https://pmsvanidhi.mohua.gov.in"
+        },
+        {
+          "field": "vending_start_date",
+          "operator": "<=",
+          "value": "2020-03-24",
+          "description": "Must have been vending on or before March 24, 2020 (or possess a Letter of Recommendation).",
+          "source_reference": "https://pmsvanidhi.mohua.gov.in"
+        }
+      ]
+    },
+    "required_documents": [
+      {
+        "name": "Aadhaar Card",
+        "purpose": "Identity verification",
+        "source_reference": "https://pmsvanidhi.mohua.gov.in"
+      },
+      {
+        "name": "Certificate of Vending / ID Card",
+        "purpose": "Proof of being a street vendor",
+        "source_reference": "https://pmsvanidhi.mohua.gov.in"
+      }
+    ],
+    "application_fields": [
+      "fullName",
+      "aadhaar_number",
+      "is_street_vendor",
+      "vending_start_date"
+    ],
+    "evidence": [
+      {
+        "title": "PM SVANidhi Scheme Details",
+        "source_name": "Ministry of Housing and Urban Affairs",
+        "source_url": "https://pmsvanidhi.mohua.gov.in",
+        "reference": "Eligibility conditions for street vendors."
+      }
+    ],
+    "retrieval": {
+      "keywords": [
+        "street vendor",
+        "hawker",
+        "micro-credit",
+        "working capital",
+        "small loan",
+        "SVANidhi"
+      ],
+      "example_queries": [
+        "I sell vegetables on a cart and need a small loan",
+        "How can a street vendor get ₹10000 loan from government?",
+        "Financial help for roadside stall owners",
+        "Credit scheme for hawkers"
+      ]
+    }
+  },
+  {
+    "scheme_id": "NMMSS",
+    "name": "National Means-cum-Merit Scholarship Scheme",
+    "department": "Department of School Education & Literacy",
+    "category": "education",
+    "description": "Award scholarships to meritorious students of economically weaker sections to arrest their drop out at class VIII and encourage them to continue study.",
+    "target_problems": [
+      "Cannot afford school fees after class 8",
+      "Meritorious poor student might drop out of school"
+    ],
+    "eligibility": {
+      "rules": [
+        {
+          "field": "school_type",
+          "operator": "in",
+          "value": [
+            "government",
+            "aided",
+            "local_body"
+          ],
+          "description": "Must be studying in State Government, Government-aided, or local body schools.",
+          "source_reference": "https://scholarships.gov.in"
+        },
+        {
+          "field": "annual_income",
+          "operator": "<=",
+          "value": 350000,
+          "description": "Parental annual income must not exceed ₹3.50 lakh.",
+          "source_reference": "https://scholarships.gov.in"
+        },
+        {
+          "field": "previous_class_marks_percentage",
+          "operator": ">=",
+          "value": 55,
+          "description": "Must have secured at least 55% marks in Class VII (relaxable by 5% for SC/ST).",
+          "source_reference": "https://scholarships.gov.in"
+        }
+      ]
+    },
+    "required_documents": [
+      {
+        "name": "Income Certificate",
+        "purpose": "Verify economic eligibility",
+        "source_reference": "https://scholarships.gov.in"
+      },
+      {
+        "name": "Class VII Marksheet",
+        "purpose": "Verify academic merit",
+        "source_reference": "https://scholarships.gov.in"
+      },
+      {
+        "name": "Aadhaar Card",
+        "purpose": "Identity verification",
+        "source_reference": "https://scholarships.gov.in"
+      }
+    ],
+    "application_fields": [
+      "fullName",
+      "aadhaar_number",
+      "annual_income",
+      "school_type",
+      "previous_class_marks_percentage",
+      "social_category"
+    ],
+    "evidence": [
+      {
+        "title": "NMMSS Guidelines",
+        "source_name": "Ministry of Education",
+        "source_url": "https://scholarships.gov.in",
+        "reference": "Details income ceiling of 3.5 lakh and 55% mark requirement in Class VII."
+      }
+    ],
+    "retrieval": {
+      "keywords": [
+        "school scholarship",
+        "class 9",
+        "dropout",
+        "merit",
+        "means",
+        "NMMSS"
+      ],
+      "example_queries": [
+        "My son got 60% in class 7 but we are too poor to continue his education",
+        "Scholarship for government school students in 9th standard",
+        "Financial help to prevent school dropout",
+        "Means cum merit scholarship details"
+      ]
+    }
+  }
+]
