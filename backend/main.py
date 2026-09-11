@@ -351,3 +351,63 @@ async def voice_websocket_endpoint(websocket: WebSocket):
         except Exception:
             pass
 
+
+from fastapi.responses import Response
+import io
+import re
+import requests
+
+@app.get("/api/tts")
+async def google_assistant_tts(text: str):
+    """
+    Generates authentic Google Assistant Indian English voice audio stream (tl=en-IN).
+    """
+    clean_text = text.strip() if text else ""
+    if not clean_text:
+        return Response(content=b"", media_type="audio/mpeg")
+
+    # 1. Primary: Direct Google Assistant Indian English Voice API (tl=en-IN) with chunking
+    try:
+        sentences = re.split(r'(?<=[.!?,\n])\s+', clean_text)
+        chunks = []
+        current_chunk = ""
+        for s in sentences:
+            if len(current_chunk) + len(s) + 1 <= 150:
+                current_chunk = (current_chunk + " " + s).strip()
+            else:
+                if current_chunk:
+                    chunks.append(current_chunk)
+                current_chunk = s
+        if current_chunk:
+            chunks.append(current_chunk)
+
+        audio_parts = []
+        headers = {"User-Agent": "Mozilla/5.0"}
+        for chunk in chunks:
+            url = "https://translate.google.com/translate_tts"
+            params = {
+                "ie": "UTF-8",
+                "q": chunk,
+                "tl": "en-IN",
+                "client": "tw-ob"
+            }
+            res = requests.get(url, params=params, headers=headers, timeout=5)
+            if res.status_code == 200 and len(res.content) > 0:
+                audio_parts.append(res.content)
+
+        if audio_parts:
+            return Response(content=b"".join(audio_parts), media_type="audio/mpeg")
+    except Exception as e:
+        print(f"[TTS] Google en-IN API error: {e}")
+
+    # 2. Fallback: gTTS with lang="en", tld="co.in"
+    try:
+        from gtts import gTTS
+        tts = gTTS(text=clean_text, lang="en", tld="co.in", slow=False)
+        fp = io.BytesIO()
+        tts.write_to_fp(fp)
+        fp.seek(0)
+        return Response(content=fp.read(), media_type="audio/mpeg")
+    except Exception:
+        return Response(content=b"", status_code=500)
+

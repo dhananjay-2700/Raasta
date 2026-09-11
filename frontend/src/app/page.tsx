@@ -164,8 +164,6 @@ export default function Home() {
       
       if (data.status === "success") {
         setVoiceState("RESULT");
-        const spokenText = data.next_best_action?.description || data.extraction?.summary || `I matched your request to ${data.selected_scheme?.scheme_name || 'a government scheme'}.`;
-        speak(spokenText);
         updateState({
           intent: data.extraction?.intent || finalQuery,
           lifeEvent: data.extraction?.summary || "Life Event",
@@ -177,27 +175,29 @@ export default function Home() {
           nextBestAction: data.next_best_action
         });
         router.push("/journey/understand");
+      } else if (data.status === "greeting") {
+        const greetingText = data.next_best_action?.description || data.extraction?.summary || "Hello! I am RAASTA, your citizen service assistant. How can I help you today?";
+        setQuery(greetingText);
+        setVoiceState("IDLE");
+        setLoading(false);
       } else {
         console.warn("Pipeline status:", data.status);
-        const errText = data.next_best_action?.description || "We need more information. Please try again.";
-        speak(errText);
-        alert(errText);
+        const infoText = data.next_best_action?.description || "I can help you find government schemes. Could you tell me a little more about your situation?";
+        setQuery(infoText);
         setVoiceState("IDLE");
         setLoading(false);
       }
     } catch (error) {
       console.error("Error submitting query:", error);
-      alert("There was an error processing your request. Please try again.");
       setVoiceState("IDLE");
       setLoading(false);
     }
   };
 
-  const { voiceState: newVoiceState, error: voiceError, forceWakeWord, speak } = useVoiceAssistant({
+  const { voiceState: newVoiceState, error: voiceError, forceWakeWord } = useVoiceAssistant({
     onWakeWord: () => {
       const greeting = "Hello, I'm RAASTA. How can I help you today?";
       setQuery(greeting);
-      speak(greeting);
     },
     onTranscriptChange: (text) => {
       setQuery(text);

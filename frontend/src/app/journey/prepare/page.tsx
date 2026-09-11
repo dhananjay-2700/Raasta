@@ -6,18 +6,11 @@ import { useJourney } from "@/context/JourneyContext";
 import { DocumentUploadModal } from "@/components/Drawers/DocumentUploadModal";
 import { ProvenanceDrawer } from "@/components/Drawers/ProvenanceDrawer";
 import { GuidanceCard } from "@/components/Cards/GuidanceCard";
-import { useVoiceAssistant } from "@/voice/useVoiceAssistant";
-
 export default function PrepareApplication() {
   const router = useRouter();
   const { state, updateState } = useJourney();
   const [activeUpload, setActiveUpload] = useState<string | null>(null);
   const [activeProvenance, setActiveProvenance] = useState<any | null>(null);
-  const { speak } = useVoiceAssistant();
-
-  useEffect(() => {
-    speak("Let's get your application ready. We pre-filled information based on your profile. Please review the details and upload any missing documents.");
-  }, [speak]);
 
   // Form state
   const [form, setForm] = useState(

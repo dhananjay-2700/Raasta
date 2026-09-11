@@ -83,8 +83,25 @@ class MockExtractionProvider(BaseExtractionProvider):
                 "summary": "Citizen needs an LPG connection.",
                 "entities": entities
             })
+
+        # Test 5: Casual Greetings & Small Talk
+        greetings = ["hello", "hi", "hey", "good morning", "good afternoon", "good evening", "namaste", "hello raasta", "hi raasta", "hey raasta", "raasta", "how are you"]
+        if text_lower in greetings or any(text_lower == g for g in greetings) or text_lower.startswith("hello raasta") or text_lower == "raasta":
+            return json.dumps({
+                "intent": "greeting",
+                "summary": "Hello! I am RAASTA, your citizen service assistant. How can I help you today?",
+                "entities": {}
+            })
+
+        # Test 6: Capabilities Inquiry
+        if any(kw in text_lower for kw in ["what can you do", "who are you", "how does this work", "what is raasta", "help me"]):
+            return json.dumps({
+                "intent": "capabilities_inquiry",
+                "summary": "I am RAASTA, your citizen service journey agent. Tell me your situation—like needing college fees support, medical assistance, or farmer income support—and I will find the right government scheme for you.",
+                "entities": {}
+            })
             
-        # Test 5: Unknown / General
+        # Test 7: Unknown / General
         else:
             return json.dumps({
                 "intent": "unknown",

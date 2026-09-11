@@ -231,28 +231,116 @@ export function useVoiceAssistant({ onWakeWord, onTranscriptChange, onTranscript
     }
   }, [onTranscriptChange, onTranscriptComplete]);
 
-  const speak = useCallback((text: string) => {
+  const [cachedVoices, setCachedVoices] = useState<SpeechSynthesisVoice[]>([]);
+
+  // Unlock Audio playback on first user gesture to prevent Browser Autoplay policy blocks
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const unlockAudio = () => {
+      try {
+        const dummyAudio = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA");
+        dummyAudio.play().then(() => {
+          dummyAudio.pause();
+        }).catch(() => {});
+      } catch (e) {}
+    };
+
+    window.addEventListener('click', unlockAudio, { once: true });
+    window.addEventListener('touchstart', unlockAudio, { once: true });
+    window.addEventListener('keydown', unlockAudio, { once: true });
+
+    return () => {
+      window.removeEventListener('click', unlockAudio);
+      window.removeEventListener('touchstart', unlockAudio);
+      window.removeEventListener('keydown', unlockAudio);
+    };
+  }, []);
+
+  useEffect(() => {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
-    try {
-      window.speechSynthesis.cancel();
-      if (!text || !text.strip ? !text.trim() : !text) return;
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'en-IN';
-      utterance.rate = 1.0;
-      utterance.pitch = 1.0;
-      window.speechSynthesis.speak(utterance);
-    } catch (e) {
-      console.warn("[VoiceAssistant] Speech synthesis failed:", e);
+    
+    const loadVoices = () => {
+      const v = window.speechSynthesis.getVoices();
+      if (v && v.length > 0) {
+        setCachedVoices(v);
+      }
+    };
+
+    loadVoices();
+    if (window.speechSynthesis.onvoiceschanged !== undefined) {
+      window.speechSynthesis.onvoiceschanged = loadVoices;
     }
   }, []);
 
+  const getSmoothVoice = useCallback((): SpeechSynthesisVoice | null => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return null;
+    const voices = cachedVoices.length > 0 ? cachedVoices : window.speechSynthesis.getVoices();
+    if (!voices || voices.length === 0) return null;
+
+    const MALE_OR_ROBOTIC_NAMES = [
+      "fred", "alex", "rishi", "daniel", "albert", "diego", "jorge", "thomas", 
+      "luca", "oliver", "bad news", "bells", "cellos", "deranged", "hysterical", 
+      "pipe organ", "trinoids", "whisper", "zarvox", "ralph", "bruce", "junior"
+    ];
+
+    const isRoboticOrMale = (v: SpeechSynthesisVoice) => {
+      const name = v.name.toLowerCase();
+      return MALE_OR_ROBOTIC_NAMES.some(robotic => name.includes(robotic));
+    };
+
+    const preferredOrder = [
+      // 1. Indian English / India Google & native smooth voices (Google English India, Neerja, Veena, Heera, Kalpana)
+      (v: SpeechSynthesisVoice) => (v.lang.includes("en-IN") || v.lang.includes("en_IN") || v.name.includes("India")) && !isRoboticOrMale(v),
+      (v: SpeechSynthesisVoice) => (v.name.includes("Neerja") || v.name.includes("Veena") || v.name.includes("Heera") || v.name.includes("Kalpana")) && !isRoboticOrMale(v),
+      // 2. Google English voices
+      (v: SpeechSynthesisVoice) => v.name.includes("Google") && (v.name.includes("India") || v.name.includes("US English") || v.name.includes("UK English Female") || v.lang.startsWith("en")),
+      (v: SpeechSynthesisVoice) => v.name.includes("Google") && !isRoboticOrMale(v),
+      // 3. Natural / Neural Female Voices (Edge / Windows)
+      (v: SpeechSynthesisVoice) => (v.name.includes("Natural") || v.name.includes("Online") || v.name.includes("Neural")) && v.lang.startsWith("en") && !isRoboticOrMale(v),
+      // 4. Preferred Smooth Female Voices (Samantha, Victoria, Karen, Siri, Serena, Moira, Zira)
+      (v: SpeechSynthesisVoice) => (
+        v.name.includes("Samantha") ||
+        v.name.includes("Victoria") ||
+        v.name.includes("Karen") ||
+        v.name.includes("Siri") ||
+        v.name.includes("Serena") ||
+        v.name.includes("Moira") ||
+        v.name.includes("Zira")
+      ) && v.lang.startsWith("en"),
+      // 5. Any English voice that is NOT robotic/male
+      (v: SpeechSynthesisVoice) => v.lang.startsWith("en") && !isRoboticOrMale(v),
+      // 6. Any voice that is NOT robotic/male
+      (v: SpeechSynthesisVoice) => !isRoboticOrMale(v),
+    ];
+
+    for (const testFn of preferredOrder) {
+      const match = voices.find(testFn);
+      if (match) return match;
+    }
+    return voices.find(v => !isRoboticOrMale(v)) || voices[0] || null;
+  }, [cachedVoices]);
+
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
   const stopSpeaking = useCallback(() => {
+    if (audioRef.current) {
+      try {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      } catch (e) {}
+    }
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       try {
         window.speechSynthesis.cancel();
       } catch (e) {}
     }
   }, []);
+
+  const speak = useCallback((text: string) => {
+    // RAASTA is muted per user request. Stop any current audio and stay quiet.
+    stopSpeaking();
+  }, [stopSpeaking]);
 
   // Clean up command listener on unmount
   useEffect(() => {

@@ -6,18 +6,10 @@ import { useJourney } from "@/context/JourneyContext";
 import { EvidenceCard } from "@/components/Cards/EvidenceCard";
 import { GuidanceCard } from "@/components/Cards/GuidanceCard";
 import { WhyThisServiceDrawer } from "@/components/Drawers/WhyThisServiceDrawer";
-import { useVoiceAssistant } from "@/voice/useVoiceAssistant";
-
 export default function FindService() {
   const router = useRouter();
   const { state } = useJourney();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const { speak } = useVoiceAssistant();
-
-  useEffect(() => {
-    const schemeName = state.service?.scheme_name || state.service?.name || "an official assistance service";
-    speak(`We found a service that may help: ${schemeName}. Based on what you told me, this service appears relevant.`);
-  }, [state.service, speak]);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">

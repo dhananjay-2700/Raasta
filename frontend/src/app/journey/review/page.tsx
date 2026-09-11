@@ -4,19 +4,12 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useJourney } from "@/context/JourneyContext";
 import { EvidenceTrailDrawer } from "@/components/Drawers/EvidenceTrailDrawer";
-import { useVoiceAssistant } from "@/voice/useVoiceAssistant";
-
 export default function ReviewApplication() {
   const router = useRouter();
   const { state, updateState } = useJourney();
   const [isEvidenceOpen, setIsEvidenceOpen] = useState(false);
   const [hasConsent, setHasConsent] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { speak } = useVoiceAssistant();
-
-  useEffect(() => {
-    speak("Please review your application details. When you give consent, RAASTA will assist you in filling your application on the official government portal.");
-  }, [speak]);
 
   useEffect(() => {
     // Sync current active journey state to RAASTA backend for browser extension

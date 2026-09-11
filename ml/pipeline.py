@@ -33,10 +33,26 @@ class RAASTAPipeline:
             citizen_info = extract_citizen_information(query, provider=self.extraction_provider)
             diagnostics['extraction_time_ms'] = round((time.time() - t0) * 1000, 2)
         
-            # 3. Validate extraction
-            if citizen_info.intent == "unknown" and not citizen_info.entities:
-                # We flag this as insufficient information early
-                pass 
+            # 3. Validate extraction & handle casual greetings
+            if citizen_info.intent in ["greeting", "capabilities_inquiry"]:
+                msg = citizen_info.summary or "Hello! I am RAASTA, your citizen service assistant. How can I help you today?"
+                nba = NextBestAction(
+                    action_type="request_information",
+                    title="How can I help you today?",
+                    description=msg,
+                    priority="high",
+                    reason="Citizen provided a casual greeting or general question.",
+                    required_item=None
+                )
+                diagnostics["total_time_ms"] = round((time.time() - start_time) * 1000, 2)
+                return PipelineResponse(
+                    status="greeting",
+                    query=query,
+                    extraction=citizen_info,
+                    retrieval={"results": []},
+                    next_best_action=nba,
+                    diagnostics=diagnostics
+                )
             
             # 4. Enrich retrieval representation
             # (Implicitly handled by passing CitizenInformation to retrieval, which builds a structured query)
