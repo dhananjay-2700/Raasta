@@ -1,17 +1,7 @@
 // Service worker for RAASTA extension
 console.log("RAASTA Background Service Worker loaded.");
 
-const DEFAULT_DEMO_JOURNEY = {
-    journey_id: "JRN_12345",
-    scheme_id: "PM_USP_CSS",
-    scheme_name: "PM-USP Scholarship",
-    status: "ready_to_apply",
-    citizen_data: {
-        full_name: { value: "Rahul Sharma", source: "Citizen Conversation", confidence: 0.96 },
-        state: { value: "Rajasthan", source: "Citizen Profile", confidence: 0.98 },
-        annual_income: { value: 400000, source: "Citizen Conversation", confidence: 0.95 }
-    }
-};
+
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     // 1. GET ACTIVE JOURNEY
@@ -24,11 +14,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 return response.json();
             })
             .then(data => {
-                sendResponse({ success: true, journey: data.journey || DEFAULT_DEMO_JOURNEY });
+                sendResponse({ success: true, journey: data.journey || null });
             })
             .catch(err => {
-                console.warn("RAASTA Backend fetch failed, using demo journey context:", err.message);
-                sendResponse({ success: true, journey: DEFAULT_DEMO_JOURNEY });
+                console.warn("RAASTA Backend fetch failed:", err.message);
+                sendResponse({ success: false, error: err.message, journey: null });
             });
         
         return true; // Async channel

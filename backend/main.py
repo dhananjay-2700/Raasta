@@ -135,21 +135,7 @@ async def set_active_journey(journey_data: dict):
 async def get_active_journey():
     journey = active_journey_store.get("current")
     if not journey:
-        # Provide default test journey if not explicitly set
-        return {
-            "status": "success",
-            "journey": {
-                "journey_id": "JRN_12345",
-                "scheme_id": "PM_USP_CSS",
-                "scheme_name": "PM-USP Scholarship",
-                "status": "ready_to_apply",
-                "citizen_data": {
-                    "full_name": { "value": "Rahul Sharma", "source": "Citizen Conversation", "confidence": 0.96 },
-                    "state": { "value": "Rajasthan", "source": "Citizen Profile", "confidence": 0.98 },
-                    "annual_income": { "value": 400000, "source": "Citizen Conversation", "confidence": 0.95 }
-                }
-            }
-        }
+        return {"status": "success", "journey": None}
     return {"status": "success", "journey": journey}
 
 @app.delete("/api/raasta/journey/active")
