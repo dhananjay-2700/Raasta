@@ -13,6 +13,30 @@ export default function UnderstandNeed() {
     router.push("/journey/service");
   };
 
+  const handleSchemeClick = async () => {
+    const targetUrl = state.service?.scheme_url || "http://127.0.0.1:8000/extension/mock_gov_site.html";
+    try {
+      await fetch("http://127.0.0.1:8000/api/raasta/journey/active", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          journey_id: "JRN_" + Date.now(),
+          scheme_id: state.service?.scheme_id || "PM_USP_CSS",
+          scheme_name: state.service?.scheme_name || "PM-USP Scholarship",
+          status: "ready_to_apply",
+          citizen_data: {
+            "full_name": { "value": state.person || "Rahul Sharma", "source": "Citizen Conversation", "confidence": 0.96 },
+            "state": { "value": "Rajasthan", "source": "Citizen Profile", "confidence": 0.98 },
+            "annual_income": { "value": 400000, "source": "Citizen Conversation", "confidence": 0.95 }
+          }
+        })
+      });
+    } catch (err) {
+      console.error("Failed to set active journey:", err);
+    }
+    window.open(targetUrl, "_blank");
+  };
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="space-y-2">
@@ -46,8 +70,13 @@ export default function UnderstandNeed() {
           <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Recommended Scheme</p>
           <div className="flex items-center space-x-3">
             <span className="text-2xl">🏛️</span>
-            <span className="text-xl font-medium text-gray-900">
-              {state.service?.scheme_name || "Assistance Program"}
+            <span 
+              className="text-xl font-medium text-red-600 cursor-pointer hover:underline flex items-center gap-1.5"
+              onClick={handleSchemeClick}
+              title="Click to visit official portal and launch RAASTA extension"
+            >
+              {state.service?.scheme_name || "PM-USP Central Sector Scholarship"}
+              <svg className="w-5 h-5 inline-block text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
             </span>
           </div>
         </div>

@@ -35,7 +35,8 @@ export async function POST(req: Request) {
       },
       selected_scheme: {
         scheme_id: "PM_USP_CSS",
-        scheme_name: "PM-USP Central Sector Scholarship"
+        scheme_name: "PM-USP Central Sector Scholarship",
+        scheme_url: "http://127.0.0.1:8000/extension/mock_gov_site.html"
       },
       eligibility: {
         status: "needs_information",

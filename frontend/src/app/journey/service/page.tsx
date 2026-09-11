@@ -11,6 +11,31 @@ export default function FindService() {
   const { state } = useJourney();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
+  const handleSchemeClick = async () => {
+    const targetUrl = state.service?.scheme_url || "http://127.0.0.1:8000/extension/mock_gov_site.html";
+    try {
+      await fetch("http://127.0.0.1:8000/api/raasta/journey/active", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          journey_id: "JRN_" + Date.now(),
+          scheme_id: state.service?.scheme_id || "PM_USP_CSS",
+          scheme_name: state.service?.scheme_name || "PM-USP Scholarship",
+          status: "ready_to_apply",
+          citizen_data: {
+            "full_name": { "value": state.person || "Rahul Sharma", "source": "Citizen Conversation", "confidence": 0.96 },
+            "state": { "value": "Rajasthan", "source": "Citizen Profile", "confidence": 0.98 },
+            "annual_income": { "value": 400000, "source": "Citizen Conversation", "confidence": 0.95 }
+          }
+        })
+      });
+    } catch (err) {
+      console.error("Failed to set active journey:", err);
+    }
+    window.open(targetUrl, "_blank");
+  };
+
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="space-y-2">
@@ -23,7 +48,14 @@ export default function FindService() {
             <div className="flex items-center space-x-3">
               <span className="text-4xl">🎓</span>
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">{state.service?.scheme_name || "Assistance Service"}</h2>
+                <h2 
+                  className="text-2xl font-bold flex items-center gap-2 text-red-600 cursor-pointer hover:underline"
+                  onClick={handleSchemeClick}
+                  title="Click to visit official portal and launch RAASTA extension"
+                >
+                  {state.service?.scheme_name || "Assistance Service"}
+                  <svg className="w-6 h-6 inline-block text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                </h2>
                 <div className="flex items-center mt-1 space-x-2">
                   <span className="px-2.5 py-0.5 rounded-full bg-red-100 text-red-800 text-xs font-semibold">Potentially relevant</span>
                 </div>

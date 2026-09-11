@@ -4,6 +4,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 import random
 import time
@@ -11,6 +12,8 @@ import asyncio
 from contextlib import asynccontextmanager
 
 app = FastAPI(title="RAASTA API")
+
+app.mount("/extension", StaticFiles(directory=os.path.join(os.path.dirname(__file__), "..", "extension")), name="extension")
 
 @app.get("/health")
 async def health_check():

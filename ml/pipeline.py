@@ -106,7 +106,8 @@ class RAASTAPipeline:
             
             selected_scheme_meta = {
                 "scheme_id": top_scheme_result.scheme_id,
-                "scheme_name": top_scheme_result.scheme_name
+                "scheme_name": top_scheme_result.scheme_name,
+                "scheme_url": full_scheme_data.get("scheme_url", "http://127.0.0.1:8000/extension/mock_gov_site.html")
             }
             diagnostics["selected_scheme_id"] = top_scheme_result.scheme_id
             diagnostics["selected_scheme_score"] = top_scheme_result.score

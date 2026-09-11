@@ -5,11 +5,19 @@ class RaastaUI {
         this.widget = null;
         this.panel = null;
         this.isOpen = false;
+        this.initialized = false;
         
-        this.init();
+        if (document.body) {
+            this.init();
+        } else {
+            document.addEventListener("DOMContentLoaded", () => this.init());
+        }
     }
 
     init() {
+        if (this.initialized || !document.body) return;
+        this.initialized = true;
+
         // Create widget
         this.widget = document.createElement("div");
         this.widget.id = "raasta-floating-widget";
@@ -73,6 +81,14 @@ class RaastaUI {
         }
         function setTranslate(xPos, yPos, el) {
             el.style.transform = `translate3d(${xPos}px, ${yPos}px, 0)`;
+        }
+    }
+
+    openPanel() {
+        if (!this.isOpen) {
+            this.isOpen = true;
+            this.panel.style.display = "flex";
+            document.dispatchEvent(new CustomEvent('raasta:panel_opened'));
         }
     }
 
