@@ -36,7 +36,7 @@ export async function POST(req: Request) {
       selected_scheme: {
         scheme_id: "PM_USP_CSS",
         scheme_name: "PM-USP Central Sector Scholarship",
-        scheme_url: "https://www.myscheme.gov.in/"
+        scheme_url: "https://scholarships.gov.in"
       },
       eligibility: {
         status: "needs_information",

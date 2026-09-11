@@ -12,7 +12,7 @@ export default function FindService() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   const handleSchemeClick = async () => {
-    const targetUrl = state.service?.scheme_url || "https://www.myscheme.gov.in/";
+    const targetUrl = state.service?.scheme_url || "https://scholarships.gov.in";
     try {
       await fetch("http://127.0.0.1:8000/api/raasta/journey/active", {
         method: "POST",
