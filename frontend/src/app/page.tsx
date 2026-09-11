@@ -7,6 +7,7 @@ import { motion, useScroll, useTransform, AnimatePresence, useMotionValueEvent, 
 import { EvidenceCard } from "@/components/Cards/EvidenceCard";
 import { GuidanceCard } from "@/components/Cards/GuidanceCard";
 import SiriOrb from "@/components/ui/SiriOrb";
+import { useVoiceAssistant } from "@/voice/useVoiceAssistant";
 
 const CanvasSequence = ({ scrollProgress }: { scrollProgress: MotionValue<number> }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -129,41 +130,39 @@ export default function Home() {
     setMounted(true);
   }, []);
 
+  const handleSearchSubmit = async (overrideQuery?: string | React.MouseEvent) => {
+    const finalQuery = typeof overrideQuery === 'string' ? overrideQuery : query;
+    if (!finalQuery.trim()) return;
+    setLoading(true);
+    setTimeout(() => {
+      updateState({
+        intent: finalQuery,
+        lifeEvent: "Higher education",
+        need: "Financial assistance",
+        person: "Daughter"
+      });
+      router.push("/journey/understand");
+    }, 1000);
+  };
+
+  const { voiceState, forceWakeWord } = useVoiceAssistant({
+    onTranscriptChange: (text) => setQuery(text),
+    onTranscriptComplete: (text) => {
+      setQuery(text);
+      handleSearchSubmit(text);
+    }
+  });
+
   useEffect(() => {
-    // Connect to WebSocket for Vosk wake word detection
-    const ws = new WebSocket("ws://localhost:8000/api/ws/voice");
-    
-    ws.onopen = () => console.log("[VOICE] WebSocket connected to backend.");
-    ws.onerror = (e) => console.warn("[VOICE] WebSocket error (often safe to ignore during Strict Mode unmounts):", e);
-    ws.onclose = () => console.log("[VOICE] WebSocket disconnected. Refresh to reconnect.");
-
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (data.event === "wake_word_detected") {
-          setSiriActive(true);
-          setQuery("Listening to your voice...");
-        } else if (data.event === "transcript") {
-          setSiriActive(false);
-          const transcriptText = data.text;
-          
-          // Replace "Listening to your voice..." with the actual transcript, 
-          // or append it if they spoke multiple times.
-          setQuery((prev) => 
-            prev === "Listening to your voice..." 
-              ? transcriptText 
-              : prev + " " + transcriptText
-          );
-        }
-      } catch (e) {
-        console.error("Error parsing WS message", e);
+    if (voiceState === 'ACTIVATING' || voiceState === 'LISTENING') {
+      setSiriActive(true);
+      if (voiceState === 'ACTIVATING') {
+        setQuery("Listening to your voice...");
       }
-    };
-
-    return () => {
-      ws.close();
-    };
-  }, [router, updateState]);
+    } else {
+      setSiriActive(false);
+    }
+  }, [voiceState]);
 
   // 1. Canvas Sequence Scroll hook
   const canvasContainerRef = useRef<HTMLDivElement>(null);
@@ -183,19 +182,7 @@ export default function Home() {
   const y2 = useTransform(heroProgress, [0, 1], [0, -300]);
   const opacityHeroText = useTransform(heroProgress, [0, 0.8], [1, 0]);
   
-  const handleSearchSubmit = async () => {
-    if (!query.trim()) return;
-    setLoading(true);
-    setTimeout(() => {
-      updateState({
-        intent: query,
-        lifeEvent: "Higher education",
-        need: "Financial assistance",
-        person: "Daughter"
-      });
-      router.push("/journey/understand");
-    }, 1000);
-  };
+
 
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setQuery(e.target.value);
