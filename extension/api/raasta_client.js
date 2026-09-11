@@ -4,7 +4,7 @@ class RaastaClient {
     constructor() {}
 
     async getActiveJourney() {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             chrome.runtime.sendMessage({ action: "GET_ACTIVE_JOURNEY" }, (response) => {
                 if (chrome.runtime.lastError) {
                     console.error("RAASTA Client Error:", chrome.runtime.lastError);
@@ -13,6 +13,21 @@ class RaastaClient {
                     resolve(response.journey);
                 } else {
                     resolve(null);
+                }
+            });
+        });
+    }
+
+    async extractFieldValue(field, text) {
+        return new Promise((resolve) => {
+            chrome.runtime.sendMessage({ action: "EXTRACT_FIELD", field: field, text: text }, (response) => {
+                if (chrome.runtime.lastError) {
+                    console.error("RAASTA Client Error:", chrome.runtime.lastError);
+                    resolve({ field, value: text, confidence: 0.70, status: "error" });
+                } else if (response && response.success && response.extraction) {
+                    resolve(response.extraction);
+                } else {
+                    resolve({ field, value: text, confidence: 0.70, status: "error" });
                 }
             });
         });

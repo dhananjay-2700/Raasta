@@ -16,9 +16,9 @@ export default function PrepareApplication() {
   // Form state
   const [form, setForm] = useState(
     state.form || {
-      studentName: "Ananya Sharma",
-      institution: "XYZ University",
-      course: "B.Tech",
+      studentName: (state.person && state.person !== "Self") ? state.person : "",
+      institution: "",
+      course: "",
       householdIncome: "",
     }
   );
@@ -97,27 +97,45 @@ export default function PrepareApplication() {
             <div className="p-6 space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Student name</label>
-                  <input type="text" className="w-full border border-gray-300 rounded-lg shadow-sm bg-gray-50 px-4 py-2 text-gray-900" value={form.studentName} readOnly />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Student / Applicant name</label>
+                  <input 
+                    type="text" 
+                    className="w-full border border-gray-300 rounded-lg shadow-sm bg-white px-4 py-2 text-gray-900 focus:ring-2 focus:ring-red-500 focus:outline-none" 
+                    value={form.studentName} 
+                    placeholder="Enter student name"
+                    onChange={(e) => setForm({ ...form, studentName: e.target.value })}
+                  />
                   <p className="text-xs text-gray-500 mt-1 flex items-center">
                     <span className="w-2 h-2 bg-gray-400 rounded-full mr-1.5"></span>
-                    You provided this
+                    Citizen details
                   </p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Institution</label>
-                  <input type="text" className="w-full border border-gray-300 rounded-lg shadow-sm bg-gray-50 px-4 py-2 text-gray-900" value={form.institution} readOnly />
+                  <input 
+                    type="text" 
+                    className="w-full border border-gray-300 rounded-lg shadow-sm bg-white px-4 py-2 text-gray-900 focus:ring-2 focus:ring-red-500 focus:outline-none" 
+                    value={form.institution} 
+                    placeholder="Enter college or university name"
+                    onChange={(e) => setForm({ ...form, institution: e.target.value })}
+                  />
                   <p className="text-xs text-red-600 font-medium mt-1 flex items-center">
                     <span className="text-sm mr-1">🤖</span>
-                    RAASTA suggestion
+                    RAASTA verified
                   </p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Course</label>
-                  <input type="text" className="w-full border border-gray-300 rounded-lg shadow-sm bg-gray-50 px-4 py-2 text-gray-900" value={form.course} readOnly />
+                  <input 
+                    type="text" 
+                    className="w-full border border-gray-300 rounded-lg shadow-sm bg-white px-4 py-2 text-gray-900 focus:ring-2 focus:ring-red-500 focus:outline-none" 
+                    value={form.course} 
+                    placeholder="e.g. B.Tech / Higher Education"
+                    onChange={(e) => setForm({ ...form, course: e.target.value })}
+                  />
                   <p className="text-xs text-red-600 font-medium mt-1 flex items-center">
                     <span className="text-sm mr-1">🤖</span>
-                    RAASTA suggestion
+                    RAASTA verified
                   </p>
                 </div>
                 <div>

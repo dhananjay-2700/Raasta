@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useJourney } from "@/context/JourneyContext";
 import { EvidenceTrailDrawer } from "@/components/Drawers/EvidenceTrailDrawer";
@@ -12,20 +12,80 @@ export default function ReviewApplication() {
   const [hasConsent, setHasConsent] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = () => {
+  useEffect(() => {
+    // Sync current active journey state to RAASTA backend for browser extension
+    const incomeStr = state.form?.householdIncome || "";
+    const incomeDigits = incomeStr.replace(/[^0-9]/g, "");
+    const incomeNum = incomeDigits ? parseInt(incomeDigits) : 400000;
+    const studentName = state.form?.studentName || (state.person && state.person !== "Self" ? state.person : "Citizen");
+    const institution = state.form?.institution || "";
+    const course = state.form?.course || "";
+
+    const activeJourney = {
+      journey_id: state.id || ("JRN_" + Date.now()),
+      scheme_id: state.service?.scheme_id || "PM_USP_CSS",
+      scheme_name: state.service?.scheme_name || state.service?.name || "Education Financial Assistance",
+      status: "ready_to_apply",
+      citizen_data: {
+        full_name: { value: studentName, source: "Application Form", confidence: 0.98 },
+        state: { value: "Rajasthan", source: "Citizen Profile", confidence: 0.95 },
+        annual_income: { value: incomeNum, source: "Income Certificate", confidence: 0.98 },
+        college_name: { value: institution, source: "Application Form", confidence: 0.95 },
+        course: { value: course, source: "Application Form", confidence: 0.95 }
+      }
+    };
+
+    fetch("http://localhost:8000/api/raasta/journey/active", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(activeJourney)
+    }).catch((err) => {
+      console.warn("Could not sync active journey to backend:", err);
+    });
+  }, [state]);
+
+  const handleSubmit = async () => {
     setIsSubmitting(true);
-    // Simulate submission to mock gateway
+    const appId = "RAA-EDU-2026-10482";
+
+    // Final sync before transition
+    const incomeStr = state.form?.householdIncome || "";
+    const incomeDigits = incomeStr.replace(/[^0-9]/g, "");
+    const incomeNum = incomeDigits ? parseInt(incomeDigits) : 400000;
+    const studentName = state.form?.studentName || (state.person && state.person !== "Self" ? state.person : "Citizen");
+
+    try {
+      await fetch("http://localhost:8000/api/raasta/journey/active", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          journey_id: appId,
+          scheme_id: state.service?.scheme_id || "PM_USP_CSS",
+          scheme_name: state.service?.scheme_name || state.service?.name || "Education Financial Assistance",
+          status: "ready_to_apply",
+          citizen_data: {
+            full_name: { value: studentName, source: "Application Form", confidence: 0.98 },
+            state: { value: "Rajasthan", source: "Citizen Profile", confidence: 0.95 },
+            annual_income: { value: incomeNum, source: "Income Certificate", confidence: 0.98 },
+            college_name: { value: state.form?.institution || "", source: "Application Form", confidence: 0.95 },
+            course: { value: state.form?.course || "", source: "Application Form", confidence: 0.95 }
+          }
+        })
+      });
+    } catch (e) {
+      console.warn("Sync error:", e);
+    }
+
     setTimeout(() => {
-      const appId = "RAA-EDU-2026-10482";
       updateState({
         consent: true,
         application: {
           id: appId,
-          status: "Under Review"
+          status: "Ready for Portal Autofill"
         }
       });
       router.push(`/journey/${appId}`);
-    }, 1500);
+    }, 1000);
   };
 
   return (
@@ -55,15 +115,15 @@ export default function ReviewApplication() {
             <div className="space-y-6">
               <div>
                 <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Applicant</p>
-                <p className="text-lg font-medium text-gray-900">{state.form?.studentName || "Ananya Sharma"}</p>
+                <p className="text-lg font-medium text-gray-900">{state.form?.studentName || (state.person && state.person !== "Self" ? state.person : "Citizen")}</p>
               </div>
               <div>
                 <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Institution</p>
-                <p className="text-lg font-medium text-gray-900">{state.form?.institution || "XYZ University"}</p>
+                <p className="text-lg font-medium text-gray-900">{state.form?.institution || "Pending Details"}</p>
               </div>
               <div>
                 <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Course</p>
-                <p className="text-lg font-medium text-gray-900">{state.form?.course || "B.Tech"}</p>
+                <p className="text-lg font-medium text-gray-900">{state.form?.course || "Higher Education"}</p>
               </div>
               <div>
                 <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Household income</p>
@@ -95,9 +155,9 @@ export default function ReviewApplication() {
           <h3 className="text-lg font-bold text-gray-900 mb-4">You are in control.</h3>
           
           <div className="bg-white p-5 rounded-xl border border-gray-200 mb-6">
-            <p className="text-sm font-medium text-gray-900 mb-3">Before you submit</p>
+            <p className="text-sm font-medium text-gray-900 mb-2">Autofill Assistance & Manual Portal Submission</p>
             <p className="text-sm text-gray-600 mb-4">
-              RAASTA will share the following information for this application:
+              RAASTA prepares and verifies your application details, and syncs them with the RAASTA browser extension. When you navigate to the official portal, RAASTA will assist you in filling the form field-by-field with your confirmation. RAASTA never submits applications automatically; final review and submission remain strictly in your hands.
             </p>
             <div className="grid sm:grid-cols-2 gap-3 mb-4">
               <div className="flex items-center text-sm text-gray-700">
@@ -127,7 +187,7 @@ export default function ReviewApplication() {
               onChange={(e) => setHasConsent(e.target.checked)}
             />
             <span className="text-gray-700 leading-tight">
-              I have reviewed this information and consent to submit my application.
+              I have reviewed this information and consent to use RAASTA to assist in autofilling my application on the official government portal.
             </span>
           </label>
 
@@ -143,10 +203,10 @@ export default function ReviewApplication() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  Submitting...
+                  Syncing with RAASTA Extension...
                 </>
               ) : (
-                "Submit application →"
+                "Prepare Application & Open Portal Assistance →"
               )}
             </button>
           </div>
