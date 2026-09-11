@@ -66,19 +66,27 @@ export default function UnderstandNeed() {
           </div>
         </div>
         
-        <div className="mt-8 pt-6 border-t border-gray-100">
-          <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Recommended Scheme</p>
-          <div className="flex items-center space-x-3">
-            <span className="text-2xl">🏛️</span>
-            <span 
-              className="text-xl font-medium text-red-600 cursor-pointer hover:underline flex items-center gap-1.5"
-              onClick={handleSchemeClick}
-              title="Click to visit official portal and launch RAASTA extension"
-            >
-              {state.service?.scheme_name || "PM-USP Central Sector Scholarship"}
-              <svg className="w-5 h-5 inline-block text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
-            </span>
+        <div className="mt-8 pt-6 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Recommended Scheme</p>
+            <div className="flex items-center space-x-3">
+              <span className="text-2xl">🏛️</span>
+              <span 
+                className="text-xl font-medium text-red-600 cursor-pointer hover:underline flex items-center gap-1.5"
+                onClick={handleSchemeClick}
+                title="Click to visit official portal and launch RAASTA extension"
+              >
+                {state.service?.scheme_name || "PM-USP Central Sector Scholarship"}
+              </span>
+            </div>
           </div>
+          <button
+            onClick={handleSchemeClick}
+            className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 shrink-0"
+          >
+            <span>Apply on Official Portal</span>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+          </button>
         </div>
       </div>
 

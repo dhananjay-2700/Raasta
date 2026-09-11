@@ -67,12 +67,19 @@ export default function FindService() {
             Based on your needs, we found this official government service that may be applicable.
           </p>
 
-          <div className="mt-8">
+          <div className="mt-8 flex flex-wrap items-center gap-4">
             <button 
               onClick={() => router.push("/journey/prepare")}
               className="w-full sm:w-auto px-8 py-3 bg-red-600 text-white font-medium rounded-xl hover:bg-red-700 transition-colors"
             >
               Continue →
+            </button>
+            <button
+              onClick={handleSchemeClick}
+              className="w-full sm:w-auto px-6 py-3 border-2 border-red-600 text-red-600 hover:bg-red-50 font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
+            >
+              <span>Apply on Official Site</span>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
             </button>
           </div>
         </div>
