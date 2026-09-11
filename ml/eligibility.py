@@ -2,34 +2,7 @@ import re
 from typing import Any, Dict, List, Optional
 from ml.schemas import CitizenInformation
 from ml.eligibility_schemas import EligibilityResponse, RuleEvaluation, MissingInformation, VerificationRequired
-
-def _normalize_value(val: Any) -> Any:
-    """Safely normalizes common string formats into numbers or booleans."""
-    if isinstance(val, str):
-        val_clean = val.lower().strip()
-        # Booleans
-        if val_clean in ['true', 'yes', 'y']:
-            return True
-        if val_clean in ['false', 'no', 'n']:
-            return False
-            
-        # Basic currency/number cleanup (e.g. ₹5,00,000 -> 500000)
-        num_str = re.sub(r'[^\d.]', '', val_clean)
-        if num_str:
-            # Check if original string had 'lakh' or 'lakhs' and the number isn't already converted
-            if 'lakh' in val_clean and float(num_str) < 1000:
-                return float(num_str) * 100000
-            if '.' in num_str:
-                try:
-                    return float(num_str)
-                except ValueError:
-                    pass
-            else:
-                try:
-                    return int(num_str)
-                except ValueError:
-                    pass
-    return val
+from ml.extraction import _normalize_value
 
 def _evaluate_condition(citizen_val: Any, operator: str, rule_val: Any) -> bool:
     """Deterministically evaluates a single condition."""
