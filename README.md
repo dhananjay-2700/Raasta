@@ -27,9 +27,9 @@ The complete vision for RAASTA involves a complex orchestration pipeline:
 
 ---
 
-## 🚀 Prototype (Golden Demo)
 
-We have built a **Golden Demo** that perfectly demonstrates this vision in a high-fidelity web prototype.
+
+For the 12-hour hackathon, we have built a **Golden Demo** that perfectly demonstrates this vision in a high-fidelity web prototype.
 
 ### Tech Stack
 - **Frontend:** Next.js (React), TypeScript, TailwindCSS
