@@ -7,6 +7,7 @@ import { motion, useScroll, useTransform, AnimatePresence, useMotionValueEvent, 
 import { EvidenceCard } from "@/components/Cards/EvidenceCard";
 import { GuidanceCard } from "@/components/Cards/GuidanceCard";
 import SiriOrb from "@/components/ui/SiriOrb";
+import { useVoiceAssistant } from "@/voice/useVoiceAssistant";
 
 const CanvasSequence = ({ scrollProgress }: { scrollProgress: MotionValue<number> }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -130,6 +131,64 @@ export default function Home() {
     setMounted(true);
   }, []);
 
+  const handleSearchSubmit = async (overrideQuery?: string | React.MouseEvent) => {
+    const finalQuery = typeof overrideQuery === 'string' ? overrideQuery : query;
+    if (!finalQuery.trim()) return;
+    setLoading(true);
+    
+    try {
+      const appState = {
+        application_id: state.application?.id || null,
+        uploaded_documents: state.documents.filter((d: any) => d.status === "ready" || d.status === "uploaded").map((d: any) => d.name),
+        consent_given: state.consent,
+        reviewed: false,
+        submitted: !!state.application
+      };
+
+      const res = await fetch("http://localhost:8000/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          query: finalQuery,
+          application_state: appState
+        }),
+      });
+      
+      if (!res.ok) {
+        throw new Error("Failed to analyze query");
+      }
+      
+      const data = await res.json();
+      
+      if (data.status === "success") {
+        setVoiceState("RESULT");
+        updateState({
+          intent: data.extraction?.intent || finalQuery,
+          lifeEvent: data.extraction?.summary || "Life Event",
+          need: data.extraction?.intent || "General Assistance",
+          person: data.extraction?.entities?.relationship?.value || "Self",
+          service: data.selected_scheme,
+          eligibility: data.eligibility,
+          evidence: data.provenance,
+          nextBestAction: data.next_best_action
+        });
+        router.push("/journey/understand");
+      } else {
+        console.warn("Pipeline status:", data.status);
+        alert(data.next_best_action?.description || "We need more information. Please try again.");
+        setVoiceState("IDLE");
+        setLoading(false);
+      }
+    } catch (error) {
+      console.error("Error submitting query:", error);
+      alert("There was an error processing your request. Please try again.");
+      setVoiceState("IDLE");
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     // Connect to WebSocket for Vosk wake word detection
     const ws = new WebSocket("ws://localhost:8000/api/ws/voice");
@@ -158,8 +217,7 @@ export default function Home() {
             // Automatically submit after state update
             setTimeout(() => {
               setVoiceState("PROCESSING");
-              const submitBtn = document.getElementById("search-submit-btn");
-              if (submitBtn) submitBtn.click();
+              handleSearchSubmit(newQuery);
             }, 100);
             
             return newQuery;
@@ -173,7 +231,7 @@ export default function Home() {
     return () => {
       ws.close();
     };
-  }, [router, updateState]);
+  }, [router, updateState, state]);
 
   // 1. Canvas Sequence Scroll hook
   const canvasContainerRef = useRef<HTMLDivElement>(null);
@@ -193,63 +251,7 @@ export default function Home() {
   const y2 = useTransform(heroProgress, [0, 1], [0, -300]);
   const opacityHeroText = useTransform(heroProgress, [0, 0.8], [1, 0]);
   
-  const handleSearchSubmit = async () => {
-    if (!query.trim()) return;
-    setLoading(true);
-    
-      const appState = {
-        application_id: state.application?.id || null,
-        uploaded_documents: state.documents.filter((d: any) => d.status === "ready" || d.status === "uploaded").map((d: any) => d.name),
-        consent_given: state.consent,
-        reviewed: false,
-        submitted: !!state.application
-      };
-
-      const res = await fetch("http://localhost:8000/api/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          query: query,
-          application_state: appState
-        }),
-      });
-      
-      if (!res.ok) {
-        throw new Error("Failed to analyze query");
-      }
-      
-      const data = await res.json();
-      
-      if (data.status === "success") {
-        setVoiceState("RESULT");
-        updateState({
-          intent: data.extraction?.intent || query,
-          lifeEvent: data.extraction?.summary || "Life Event",
-          need: data.extraction?.intent || "General Assistance",
-          person: data.extraction?.entities?.relationship?.value || "Self",
-          service: data.selected_scheme,
-          eligibility: data.eligibility,
-          evidence: data.provenance,
-          nextBestAction: data.next_best_action
-        });
-        router.push("/journey/understand");
-      } else {
-        // If it's insufficient_information or no_relevant_scheme, 
-        // we can still populate state with nextBestAction and navigate, or show an alert.
-        console.warn("Pipeline status:", data.status);
-        alert(data.next_best_action?.description || "We need more information. Please try again.");
-        setVoiceState("IDLE");
-        setLoading(false);
-      }
-    } catch (error) {
-      console.error("Error submitting query:", error);
-      alert("There was an error processing your request. Please try again.");
-      setVoiceState("IDLE");
-      setLoading(false);
-    }
-  };
+  // Removed duplicate handleSearchSubmit
 
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setQuery(e.target.value);
