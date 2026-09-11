@@ -26,6 +26,7 @@
         "content/field_mapper.js",
         "content/autofill.js",
         "content/vision_fallback.js",
+        "content/voice_assistant.js",
         "ui/floating_widget.js",
         "content/content.js"
       ]
