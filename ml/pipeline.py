@@ -104,11 +104,17 @@ class RAASTAPipeline:
                     diagnostics=diagnostics
                 )
             
-            official_url = full_scheme_data.get("scheme_url")
-            if not official_url and full_scheme_data.get("evidence"):
-                official_url = full_scheme_data["evidence"][0].get("source_url")
-            if not official_url:
-                official_url = "https://www.myscheme.gov.in/"
+            full_scheme_data = next((s for s in scheme_retriever.schemes_data if s["scheme_id"] == top_scheme_result.scheme_id), None)
+            if not full_scheme_data:
+                raise ValueError(f"Full scheme data not found for {top_scheme_result.scheme_id}")
+
+            from ml.kaggle_dataset import get_scheme_official_url
+
+            fallback_url = full_scheme_data.get("scheme_url")
+            if not fallback_url and full_scheme_data.get("evidence"):
+                fallback_url = full_scheme_data["evidence"][0].get("source_url")
+
+            official_url = get_scheme_official_url(top_scheme_result.scheme_name, fallback_url=fallback_url)
 
             selected_scheme_meta = {
                 "scheme_id": top_scheme_result.scheme_id,
@@ -117,10 +123,6 @@ class RAASTAPipeline:
             }
             diagnostics["selected_scheme_id"] = top_scheme_result.scheme_id
             diagnostics["selected_scheme_score"] = top_scheme_result.score
-        
-            full_scheme_data = next((s for s in scheme_retriever.schemes_data if s["scheme_id"] == top_scheme_result.scheme_id), None)
-            if not full_scheme_data:
-                raise ValueError(f"Full scheme data not found for {top_scheme_result.scheme_id}")
             
             # 8. Evaluate deterministic eligibility
             t0 = time.time()
