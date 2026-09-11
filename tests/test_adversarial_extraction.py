@@ -1,4 +1,9 @@
+import sys
+import os
 import asyncio
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 from backend.main import extract_field_endpoint, FieldExtractionRequest
 
 async def run_adversarial_extraction():

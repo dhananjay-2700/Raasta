@@ -165,7 +165,15 @@ def extract_citizen_information(text: str, provider: Optional[BaseExtractionProv
             provider = MockExtractionProvider()
         
     try:
-        raw_json_str = provider.generate_extraction(text)
+        try:
+            raw_json_str = provider.generate_extraction(text)
+        except (requests.RequestException, ConnectionError, Exception) as e:
+            if isinstance(provider, GemmaExtractionProvider):
+                logger.warning(f"Gemma server connection failed ({e}), falling back to MockExtractionProvider.")
+                fallback_provider = MockExtractionProvider()
+                raw_json_str = fallback_provider.generate_extraction(text)
+            else:
+                raise
         
         raw_json_str = raw_json_str.strip()
         if raw_json_str.startswith("```json"):

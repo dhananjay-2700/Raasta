@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # RAASTA - Citizen Service AI Platform Requirements
 # Compatible across Windows, macOS, and Linux (Python 3.10+)
 # ==============================================================================
@@ -16,7 +16,7 @@ numpy>=1.24.0
 
 # Voice Engine: Microphone Capture & Wake-Word (Vosk)
 sounddevice>=0.4.6
-vosk>=0.3.45
+vosk>=0.3.40
 
 # Voice Engine: Text-to-Speech (TTS)
 gTTS>=2.4.0

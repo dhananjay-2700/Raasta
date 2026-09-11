@@ -21,13 +21,25 @@ export function DocumentUploadModal({
 
   if (!isOpen) return null;
 
-  const handleUpload = () => {
+  const handleUpload = async () => {
     setIsUploading(true);
     setStep("processing");
-    // Simulate upload and extraction
+    try {
+      await fetch("/api/documents", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          application_id: "RAA-EDU-2026-10482",
+          document_name: documentName,
+          file_content_base64: "mock_doc_data"
+        })
+      });
+    } catch (e) {
+      console.warn("Document upload API call error:", e);
+    }
     setTimeout(() => {
       setStep("success");
-    }, 2000);
+    }, 1500);
   };
 
   const handleUseData = () => {

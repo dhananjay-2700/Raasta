@@ -314,3 +314,36 @@ async def extract_field_endpoint(req: FieldExtractionRequest):
         confidence=0.70,
         status="needs_clarification"
     )
+
+
+from agent.conversation_engine import RAASTAConversationEngine
+from agent.journey_context import JourneyContext
+
+@app.websocket("/ws/voice")
+async def voice_websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    engine = RAASTAConversationEngine()
+    journey = JourneyContext()
+    
+    try:
+        while True:
+            data = await websocket.receive_json()
+            user_text = data.get("text", "")
+            if not user_text:
+                continue
+                
+            turn_res = engine.process_turn(user_text, journey)
+            await websocket.send_json(turn_res.to_dict())
+            
+            if not turn_res.should_continue:
+                await websocket.close()
+                break
+    except WebSocketDisconnect:
+        pass
+    except Exception as e:
+        try:
+            await websocket.send_json({"error": str(e)})
+            await websocket.close()
+        except Exception:
+            pass
+

@@ -35,7 +35,7 @@ export default function ReviewApplication() {
       }
     };
 
-    fetch("http://localhost:8000/api/raasta/journey/active", {
+    fetch("/api/raasta/journey/active", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(activeJourney)
@@ -55,7 +55,7 @@ export default function ReviewApplication() {
     const studentName = state.form?.studentName || (state.person && state.person !== "Self" ? state.person : "Citizen");
 
     try {
-      await fetch("http://localhost:8000/api/raasta/journey/active", {
+      await fetch("/api/raasta/journey/active", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

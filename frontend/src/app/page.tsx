@@ -145,7 +145,7 @@ export default function Home() {
         submitted: !!state.application
       };
 
-      const res = await fetch("http://localhost:8000/api/chat", {
+      const res = await fetch("/api/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
