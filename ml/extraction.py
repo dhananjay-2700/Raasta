@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import Optional
+from typing import Optional, Any
 from pydantic import ValidationError
 
 from ml.schemas import CitizenInformation, EntityExtraction
@@ -90,21 +90,45 @@ class MockExtractionProvider(BaseExtractionProvider):
 
 class GemmaExtractionProvider(BaseExtractionProvider):
     """
-    A provider that connects to a real Gemma/LLM inference endpoint.
+    GEMMA MODE: A provider that connects to a real Gemma/LLM inference endpoint.
     Currently a placeholder pending real integration.
     """
     def __init__(self, endpoint_url: str):
         self.endpoint_url = endpoint_url
         
     def generate_extraction(self, text: str) -> str:
-        # Prompt formulation
         prompt = EXTRACTION_PROMPT.format(citizen_text=text)
-        
         # TODO: Implement actual HTTP call to Gemma server
         # response = requests.post(self.endpoint_url, json={"inputs": prompt})
         # return response.json()["generated_text"]
-        
         raise NotImplementedError("Real Gemma inference is not yet configured. Use MockExtractionProvider.")
+
+import re
+
+def _normalize_value(val: Any) -> Any:
+    """Safely normalizes common string formats into numbers or booleans."""
+    if isinstance(val, str):
+        val_clean = val.lower().strip()
+        if val_clean in ['true', 'yes', 'y']:
+            return True
+        if val_clean in ['false', 'no', 'n']:
+            return False
+            
+        num_str = re.sub(r'[^\d.]', '', val_clean)
+        if num_str:
+            if 'lakh' in val_clean and float(num_str) < 1000:
+                return float(num_str) * 100000
+            if '.' in num_str:
+                try:
+                    return float(num_str)
+                except ValueError:
+                    pass
+            else:
+                try:
+                    return int(num_str)
+                except ValueError:
+                    pass
+    return val
 
 def extract_citizen_information(text: str, provider: Optional[BaseExtractionProvider] = None) -> CitizenInformation:
     """
@@ -119,13 +143,11 @@ def extract_citizen_information(text: str, provider: Optional[BaseExtractionProv
         )
         
     if provider is None:
-        # Default to mock provider for development
         provider = MockExtractionProvider()
         
     try:
         raw_json_str = provider.generate_extraction(text)
         
-        # Clean up potential markdown formatting from LLMs (e.g. ```json ... ```)
         raw_json_str = raw_json_str.strip()
         if raw_json_str.startswith("```json"):
             raw_json_str = raw_json_str[7:]
@@ -134,7 +156,12 @@ def extract_citizen_information(text: str, provider: Optional[BaseExtractionProv
             
         data = json.loads(raw_json_str)
         
-        # Validate with Pydantic
+        # Apply normalization to all extracted entity values
+        if "entities" in data:
+            for key, entity in data["entities"].items():
+                if "value" in entity:
+                    entity["value"] = _normalize_value(entity["value"])
+        
         validated_data = CitizenInformation(**data)
         return validated_data
         

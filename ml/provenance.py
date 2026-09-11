@@ -35,7 +35,16 @@ def build_provenance(citizen_info: CitizenInformation, scheme: Dict[str, Any], e
                 reference="evidence_unavailable"
             )
             
-        # Attempt to find field-specific evidence
+        # Attempt explicit field mapping first
+        for ev in scheme_evidence_list:
+            if "proves_fields" in ev and field in ev["proves_fields"]:
+                return OfficialEvidence(
+                    source_name=ev.get("source_name", "evidence_unavailable"),
+                    source_url=ev.get("source_url", "evidence_unavailable"),
+                    reference=ev.get("reference", "evidence_unavailable")
+                )
+                
+        # Fallback to string matching
         field_clean = field.replace("_", " ").lower()
         for ev in scheme_evidence_list:
             if field_clean in ev.get("reference", "").lower() or field_clean in ev.get("title", "").lower():

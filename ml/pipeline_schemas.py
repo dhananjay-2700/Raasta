@@ -20,3 +20,4 @@ class PipelineResponse(BaseModel):
     provenance: Optional[ProvenanceReport] = None
     next_best_action: Optional[NextBestAction] = None
     error_message: Optional[str] = None
+    diagnostics: Optional[Dict[str, Any]] = Field(default=None, description="Internal telemetry and flow tracing. Do not show to citizens.")
