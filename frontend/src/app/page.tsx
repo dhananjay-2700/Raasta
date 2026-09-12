@@ -65,9 +65,24 @@ const CanvasSequence = ({ scrollProgress }: { scrollProgress: MotionValue<number
     drawFrame(frameIndex);
   });
 
+  const textOpacity = useTransform(scrollProgress, [0.8, 0.95], [0, 1]);
+  const textScale = useTransform(scrollProgress, [0.8, 0.95], [0.9, 1]);
+
   return (
     <div className="relative w-full h-full bg-[#111]">
        <canvas ref={canvasRef} className="w-full h-full object-cover opacity-90" />
+       
+       {imagesLoaded && (
+         <motion.div 
+           style={{ opacity: textOpacity, scale: textScale }}
+           className="absolute inset-0 flex items-center justify-center pointer-events-none z-50"
+         >
+           <h1 className="font-serif text-[15vw] md:text-[12vw] leading-none text-white uppercase tracking-tighter">
+             RAASTA
+           </h1>
+         </motion.div>
+       )}
+
        {!imagesLoaded && (
          <div className="absolute inset-0 flex items-center justify-center text-white font-serif tracking-widest text-sm uppercase">
             Loading Experience...
@@ -97,10 +112,8 @@ export default function Home() {
 
   useMotionValueEvent(canvasProgress, "change", (latest) => {
     if (latest >= 0.99 && !introFinished) {
+      window.scrollTo({ top: 0, behavior: 'instant' });
       setIntroFinished(true);
-      setTimeout(() => {
-        window.scrollTo({ top: 0, behavior: 'instant' });
-      }, 0);
     }
   });
 
@@ -206,7 +219,7 @@ export default function Home() {
       
       {/* 1. Canvas Sequence Section */}
       {!introFinished && (
-        <div ref={canvasContainerRef} className="h-[400vh] w-full relative z-40 bg-[#111]">
+        <div ref={canvasContainerRef} className="h-[800vh] w-full relative z-40 bg-[#111]">
           <div className="sticky top-0 h-[100svh] w-full overflow-hidden">
              <CanvasSequence scrollProgress={canvasProgress} />
              
