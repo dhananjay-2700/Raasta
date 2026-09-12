@@ -4,8 +4,6 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useJourney } from "@/context/JourneyContext";
 import { motion, useScroll, useTransform, AnimatePresence, useMotionValueEvent, MotionValue } from "framer-motion";
-import { EvidenceCard } from "@/components/Cards/EvidenceCard";
-import { GuidanceCard } from "@/components/Cards/GuidanceCard";
 import SiriOrb from "@/components/ui/SiriOrb";
 import { useVoiceAssistant } from "@/voice/useVoiceAssistant";
 
@@ -26,7 +24,6 @@ const CanvasSequence = ({ scrollProgress }: { scrollProgress: MotionValue<number
           setImagesLoaded(true);
         }
       };
-      // To handle errors just in case, we still count them so it eventually finishes
       img.onerror = () => {
         loadedCount++;
         if (loadedCount === totalFrames) {
@@ -80,56 +77,32 @@ const CanvasSequence = ({ scrollProgress }: { scrollProgress: MotionValue<number
   );
 };
 
-const AbstractArt = () => (
-  <svg viewBox="0 0 800 800" className="w-full h-full opacity-0 animate-fade-in" style={{ animationDelay: '0.2s', animationFillMode: 'forwards' }}>
-    <path 
-      d="M250,200 C350,100 550,150 650,250 C750,350 700,500 550,550 C400,600 300,500 200,450 C100,400 150,300 250,200 Z" 
-      fill="var(--color-brand-red)" 
-      className="opacity-0 animate-blob-in" 
-      style={{ animationDelay: '0.4s', transformOrigin: 'center' }} 
-    />
-    <path 
-      d="M300,600 C450,550 550,600 650,700 C750,800 450,850 300,750 C150,650 150,650 300,600 Z" 
-      fill="var(--color-brand-yellow)" 
-      className="opacity-0 animate-blob-in" 
-      style={{ animationDelay: '0.6s', transformOrigin: 'center' }} 
-    />
-    <path 
-      d="M50,750 C100,650 200,750 300,650 C400,550 350,450 400,350 C450,250 550,300 600,400 C620,450 550,450 500,500 C450,550 400,600 500,650 C600,700 700,600 650,500 C600,400 550,300 450,200 C350,100 250,150 300,250 C320,300 300,350 400,450" 
-      fill="none" 
-      stroke="#111" 
-      strokeWidth="4" 
-      strokeLinecap="round" 
-      strokeLinejoin="round" 
-      className="animate-draw-line"
-      style={{ animationDelay: '0.2s' }}
-    />
-    <path 
-      d="M350,550 C380,530 420,550 450,550 C480,550 520,530 550,550 C600,600 500,620 450,580 C400,620 300,600 350,550 Z" 
-      fill="none" 
-      stroke="#111" 
-      strokeWidth="4" 
-      strokeLinecap="round" 
-      strokeLinejoin="round"
-      className="animate-draw-line"
-      style={{ animationDelay: '1.2s' }}
-    />
-  </svg>
-);
-
 export default function Home() {
   const router = useRouter();
   const { state, updateState } = useJourney();
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
-  const [mounted, setMounted] = useState(false);
   const [siriActive, setSiriActive] = useState(false);
   const [voiceState, setVoiceState] = useState("IDLE");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const [introFinished, setIntroFinished] = useState(false);
+
+  // 1. Canvas Sequence Scroll hook
+  const canvasContainerRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress: canvasProgress } = useScroll({
+    target: canvasContainerRef,
+    offset: ["start start", "end end"]
+  });
+
+  useMotionValueEvent(canvasProgress, "change", (latest) => {
+    if (latest >= 0.99 && !introFinished) {
+      setIntroFinished(true);
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'instant' });
+      }, 0);
+    }
+  });
 
   const handleSearchSubmit = async (overrideQuery?: string | React.MouseEvent) => {
     const finalQuery = typeof overrideQuery === 'string' ? overrideQuery : query;
@@ -156,10 +129,7 @@ export default function Home() {
         }),
       });
       
-      if (!res.ok) {
-        throw new Error("Failed to analyze query");
-      }
-      
+      if (!res.ok) throw new Error("Failed to analyze query");
       const data = await res.json();
       
       if (data.status === "success") {
@@ -217,26 +187,6 @@ export default function Home() {
     }
   }, [newVoiceState]);
 
-  // 1. Canvas Sequence Scroll hook
-  const canvasContainerRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress: canvasProgress } = useScroll({
-    target: canvasContainerRef,
-    offset: ["start start", "end end"]
-  });
-
-  // 2. Hero Parallax Scroll hook
-  const heroContainerRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress: heroProgress } = useScroll({
-    target: heroContainerRef,
-    offset: ["start start", "end start"]
-  });
-
-  const y1 = useTransform(heroProgress, [0, 1], [0, 400]);
-  const y2 = useTransform(heroProgress, [0, 1], [0, -300]);
-  const opacityHeroText = useTransform(heroProgress, [0, 0.8], [1, 0]);
-  
-  // Removed duplicate handleSearchSubmit
-
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setQuery(e.target.value);
     if (textareaRef.current) {
@@ -246,192 +196,259 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground selection:bg-brand-red selection:text-white pb-32">
+    <div className="min-h-screen bg-[#FAF4EB] text-slate-900 selection:bg-orange-500 selection:text-white pb-20 font-sans">
       {voiceError && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 bg-red-500 text-white px-6 py-3 rounded-full z-[200] shadow-xl text-sm font-medium animate-fade-in-up">
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 bg-red-600 text-white px-6 py-3 rounded-full z-[200] shadow-xl text-sm font-medium">
           {voiceError}
         </div>
       )}
       <SiriOrb active={siriActive} text="Listening..." />
       
       {/* 1. Canvas Sequence Section */}
-      <div ref={canvasContainerRef} className="h-[400vh] w-full relative z-40 bg-[#111]">
-        <div className="sticky top-0 h-[100svh] w-full overflow-hidden">
-           <CanvasSequence scrollProgress={canvasProgress} />
-           
-           <motion.div 
-             className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center justify-center text-white/50"
-           >
-             <span className="text-[10px] md:text-xs uppercase tracking-widest mb-2 font-medium">Scroll</span>
-             <div className="w-[1px] h-12 bg-white/20 overflow-hidden relative">
-               <motion.div 
-                 animate={{ y: [0, 48, 48], opacity: [0, 1, 0] }}
-                 transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                 className="w-full h-full bg-white absolute top-[-100%]"
-               />
-             </div>
-           </motion.div>
-        </div>
-      </div>
-
-      {/* 2. Hero Parallax Section */}
-      <div ref={heroContainerRef} className="h-[200vh] w-full relative z-30 bg-[#FAF4EB] -mt-[100vh]">
-        <div className="sticky top-0 h-[100svh] w-full overflow-hidden">
-          
-          <div className="absolute inset-0 z-0">
-            {mounted && (
-              <video 
-                src="https://assets.mixkit.co/videos/preview/mixkit-ink-swirling-in-water-472-large.mp4"
-                autoPlay 
-                loop 
-                muted 
-                playsInline
-                className="w-full h-full object-cover opacity-30 mix-blend-multiply"
-              />
-            )}
+      {!introFinished && (
+        <div ref={canvasContainerRef} className="h-[400vh] w-full relative z-40 bg-[#111]">
+          <div className="sticky top-0 h-[100svh] w-full overflow-hidden">
+             <CanvasSequence scrollProgress={canvasProgress} />
+             
+             <motion.div 
+               className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center justify-center text-white/50"
+             >
+               <span className="text-[10px] md:text-xs uppercase tracking-widest mb-2 font-medium">Scroll</span>
+               <div className="w-[1px] h-12 bg-white/20 overflow-hidden relative">
+                 <motion.div 
+                   animate={{ y: [0, 48, 48], opacity: [0, 1, 0] }}
+                   transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                   className="w-full h-full bg-white absolute top-[-100%]"
+                 />
+               </div>
+             </motion.div>
           </div>
-
-          <motion.div style={{ y: y1 }} className="absolute inset-0 z-10 flex items-center justify-center opacity-80 pointer-events-none">
-            <div className="w-[600px] h-[600px] md:w-[900px] md:h-[900px]">
-               <AbstractArt />
-            </div>
-          </motion.div>
-
-          <motion.div 
-            style={{ y: y2, opacity: opacityHeroText }} 
-            className="relative z-20 text-center w-full px-4 pt-12 h-full flex flex-col justify-center"
-          >
-            <motion.h1 
-              initial={{ opacity: 0, y: 50 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1.2, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              viewport={{ once: true }}
-              className="font-serif text-[15vw] md:text-[12vw] leading-none text-[#111] uppercase tracking-tighter"
-            >
-              RAASTA
-            </motion.h1>
-            <motion.p 
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              transition={{ duration: 1, delay: 0.8 }}
-              viewport={{ once: true }}
-              className="mt-4 md:mt-6 text-lg md:text-3xl font-light italic text-[#111] max-w-2xl mx-auto"
-            >
-              One Conversation. Every Journey.
-            </motion.p>
-          </motion.div>
-
         </div>
-      </div>
+      )}
 
-      {/* The rest of the page follows naturally */}
-      <section className="py-32 md:py-48 px-6 bg-white relative z-20">
-        <div className="max-w-4xl mx-auto text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 100 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-          >
-            <h2 className="font-serif text-5xl md:text-7xl text-[#111] leading-tight mb-8">
-              The New Standard <br/>
-              <span className="italic text-gray-400">in Civic Interaction</span>
-            </h2>
-            <p className="text-xl md:text-2xl text-gray-700 font-light leading-relaxed max-w-3xl mx-auto">
-              You don&apos;t need to memorize complex scheme names or navigate confusing bureaucratic structures. Simply describe your situation, and we translate it into the exact requirements you need.
-            </p>
-          </motion.div>
-        </div>
-      </section>
+      {/* 2. HERO & 3. MAIN INPUT */}
+      <section className="px-6 pt-24 pb-16 md:pt-32 md:pb-24 max-w-4xl mx-auto text-center relative z-20 bg-[#FAF4EB]">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+          <h1 className="text-5xl md:text-6xl lg:text-7xl font-serif font-bold text-slate-900 leading-tight mb-6">
+            Tell us what happened.<br />
+            <span className="text-orange-600">We&apos;ll find the way forward.</span>
+          </h1>
+          <p className="text-xl md:text-2xl text-slate-600 mb-12 max-w-2xl mx-auto font-light">
+            You don&apos;t need to know the scheme name, department, or application process.
+          </p>
+        </motion.div>
 
-      <section className="py-24 md:py-40 bg-background relative z-20 overflow-hidden border-t border-gray-200">
-        <div className="max-w-5xl mx-auto px-6 relative">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-            className="bg-white p-8 md:p-16 rounded-[2rem] shadow-2xl border border-gray-100 relative overflow-hidden"
-          >
-            <div className="absolute top-0 right-0 w-64 h-64 bg-brand-yellow rounded-full mix-blend-multiply filter blur-3xl opacity-20 -translate-y-1/2 translate-x-1/4"></div>
-            
-            <h3 className="font-serif text-3xl md:text-5xl text-[#111] mb-12 relative z-10">Tell us what you need.</h3>
-            
-            <div className="relative z-10 group">
-              <textarea
-                ref={textareaRef}
-                className="w-full p-4 md:p-6 pb-20 text-2xl md:text-4xl text-[#111] bg-transparent border-b border-gray-300 focus:border-brand-red resize-none outline-none transition-colors duration-500 placeholder:text-gray-300 font-serif"
-                rows={1}
-                placeholder="&quot;My daughter needs financial help for college...&quot;"
-                value={query}
-                onChange={handleTextareaChange}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSearchSubmit();
-                  }
-                }}
-              />
-              <div className="absolute bottom-4 right-4 flex items-center space-x-2 md:space-x-4">
-                <button
-                  type="button"
-                  onClick={forceWakeWord}
-                  className={`w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center transition-all shadow-xl ${
-                    newVoiceState !== 'IDLE' ? 'bg-brand-red text-white animate-pulse' : 'bg-white text-[#111] hover:bg-gray-100'
-                  }`}
-                  title="Click to speak (or say 'Raasta')"
-                >
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
-                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-                    <line x1="12" y1="19" x2="12" y2="22"></line>
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }} 
+          animate={{ opacity: 1, y: 0 }} 
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 relative flex flex-col text-left max-w-3xl mx-auto"
+        >
+          <label className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2 ml-2">What are you trying to get done?</label>
+          <div className="relative">
+            <textarea
+              ref={textareaRef}
+              className="w-full text-2xl md:text-3xl text-slate-900 bg-transparent placeholder-slate-300 resize-none outline-none py-4 px-2 pr-32 transition-all font-serif"
+              rows={1}
+              placeholder="My daughter needs a scholarship..."
+              value={query}
+              onChange={handleTextareaChange}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSearchSubmit();
+                }
+              }}
+            />
+            <div className="absolute right-2 bottom-2 flex items-center space-x-2">
+              <button
+                type="button"
+                onClick={forceWakeWord}
+                className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
+                  newVoiceState !== 'IDLE' ? 'bg-orange-600 text-white animate-pulse shadow-md' : 'bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-900'
+                }`}
+                title="Click to speak (or say 'Raasta')"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                  <line x1="12" y1="19" x2="12" y2="22"></line>
+                </svg>
+              </button>
+              <button 
+                onClick={handleSearchSubmit}
+                disabled={loading || !query.trim()}
+                className="w-12 h-12 rounded-full bg-slate-900 text-white flex items-center justify-center hover:bg-teal-700 transition-all shadow-md disabled:opacity-50"
+              >
+                {loading ? (
+                  <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                </button>
-                <button 
-                  id="search-submit-btn"
-                  onClick={handleSearchSubmit}
-                  disabled={loading || !query.trim()}
-                  className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-[#111] text-white flex items-center justify-center hover:bg-brand-red hover:scale-105 transition-all disabled:opacity-50 disabled:scale-100 shadow-xl"
-                >
-                  {loading ? (
-                    <svg className="animate-spin h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                  ) : (
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                  )}
-                </button>
-              </div>
+                ) : (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                )}
+              </button>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* 4. EXAMPLE CHIPS */}
+        <motion.div 
+          initial={{ opacity: 0 }} 
+          animate={{ opacity: 1 }} 
+          transition={{ duration: 0.6, delay: 0.4 }}
+          className="flex flex-wrap items-center justify-center gap-3 mt-8"
+        >
+          <span className="text-sm font-medium text-slate-500 mr-2">Try:</span>
+          {["Scholarship", "Certificate", "Financial help", "Healthcare", "Housing"].map((chip) => (
+            <button 
+              key={chip} 
+              onClick={() => {
+                setQuery(`I need help with a ${chip.toLowerCase()}`);
+                if (textareaRef.current) textareaRef.current.focus();
+              }}
+              className="px-4 py-2 bg-white border border-slate-200 rounded-full text-sm font-medium text-slate-700 hover:border-slate-400 hover:text-slate-900 transition-colors shadow-sm"
+            >
+              {chip}
+            </button>
+          ))}
+        </motion.div>
+      </section>
+
+
+
+      {/* 5. HOW RAASTA WORKS */}
+      <section className="py-24 px-6 max-w-6xl mx-auto relative z-20">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl md:text-4xl font-serif font-bold text-slate-900">How RAASTA Works</h2>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {[
+            { step: "01", title: "Understand", desc: "Tell us your situation in normal language." },
+            { step: "02", title: "Find", desc: "RAASTA finds relevant government services and checks what may apply to you." },
+            { step: "03", title: "Complete", desc: "RAASTA helps with documents, applications and tracking." }
+          ].map((item) => (
+            <div key={item.step} className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
+              <div className="text-6xl font-bold text-slate-100 absolute -top-4 -right-4 -z-0 select-none pointer-events-none">{item.step}</div>
+              <h3 className="text-xl font-bold text-slate-900 mb-4 relative z-10">{item.title}</h3>
+              <p className="text-slate-600 relative z-10">{item.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* 6. CORE PRODUCT DEMONSTRATION */}
+      <section className="py-24 px-6 bg-white border-y border-slate-200 overflow-hidden relative z-20">
+        <div className="max-w-5xl mx-auto text-center mb-16">
+          <h2 className="text-3xl md:text-4xl font-serif font-bold text-slate-900">From a problem to a clear path</h2>
+        </div>
+        
+        <div className="max-w-3xl mx-auto relative flex flex-col items-center">
+          
+          {/* Step 1 */}
+          <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.3 }} transition={{ duration: 0.5 }} className="bg-slate-50 border border-slate-200 p-6 rounded-2xl w-full text-center relative z-10">
+            <p className="text-sm font-semibold text-slate-500 uppercase tracking-widest mb-2">Citizen Problem</p>
+            <p className="text-xl font-serif text-slate-900">"My daughter wants to go to college but we can't afford it."</p>
+          </motion.div>
+          
+          <motion.div initial={{ opacity: 0, scaleY: 0, originY: 0 }} whileInView={{ opacity: 1, scaleY: 1 }} viewport={{ once: true, amount: 0.8 }} transition={{ duration: 0.4 }} className="w-0.5 h-12 bg-orange-300"></motion.div>
+          
+          {/* Step 2 */}
+          <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.3 }} transition={{ duration: 0.5 }} className="bg-orange-50 border border-orange-200 p-6 rounded-2xl w-full text-center relative z-10">
+            <p className="text-sm font-semibold text-orange-600 uppercase tracking-widest mb-2">RAASTA Understands</p>
+            <p className="text-lg font-medium text-orange-900">Education + financial assistance</p>
+          </motion.div>
+
+          <motion.div initial={{ opacity: 0, scaleY: 0, originY: 0 }} whileInView={{ opacity: 1, scaleY: 1 }} viewport={{ once: true, amount: 0.8 }} transition={{ duration: 0.4 }} className="w-0.5 h-12 bg-teal-300"></motion.div>
+
+          {/* Step 3 */}
+          <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.3 }} transition={{ duration: 0.5 }} className="bg-teal-50 border border-teal-200 p-6 rounded-2xl w-full text-center relative z-10">
+            <p className="text-sm font-semibold text-teal-600 uppercase tracking-widest mb-2">RAASTA Finds</p>
+            <p className="text-lg font-medium text-teal-900">3 potentially relevant services</p>
+          </motion.div>
+
+          <motion.div initial={{ opacity: 0, scaleY: 0, originY: 0 }} whileInView={{ opacity: 1, scaleY: 1 }} viewport={{ once: true, amount: 0.8 }} transition={{ duration: 0.4 }} className="w-0.5 h-12 bg-slate-400"></motion.div>
+
+          {/* Step 4 */}
+          <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.3 }} transition={{ duration: 0.5 }} className="bg-slate-900 text-white p-6 rounded-2xl w-full flex flex-col md:flex-row items-center justify-between relative z-10 shadow-lg">
+            <div className="text-center md:text-left mb-4 md:mb-0">
+              <p className="text-sm font-semibold text-slate-400 uppercase tracking-widest mb-1">RAASTA Creates</p>
+              <p className="text-lg font-medium">Your clear path forward</p>
+            </div>
+            <div className="flex items-center justify-center space-x-2 md:space-x-4 text-sm font-medium">
+              <span className="bg-slate-800 px-3 py-1.5 rounded-lg">Eligibility</span>
+              <span className="text-slate-600">→</span>
+              <span className="bg-slate-800 px-3 py-1.5 rounded-lg">Documents</span>
+              <span className="text-slate-600">→</span>
+              <span className="bg-slate-800 px-3 py-1.5 rounded-lg">Application</span>
             </div>
           </motion.div>
         </div>
       </section>
 
+      {/* 8. ACTIVE JOURNEY PREVIEW */}
       {state.application && (
-        <section className="pb-32 bg-background px-6 relative z-20">
-          <div className="max-w-5xl mx-auto">
-            <motion.div 
-              initial={{ opacity: 0, y: 50 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="flex flex-col md:flex-row items-center justify-between p-10 md:p-16 bg-[#111] rounded-[2rem] shadow-2xl"
-            >
-              <div className="space-y-4 text-center md:text-left text-white">
-                <p className="text-sm font-bold text-brand-yellow tracking-widest uppercase">Continue Your Journey</p>
-                <h3 className="font-serif text-3xl md:text-4xl text-white">Education Financial Assistance</h3>
-                <p className="text-gray-400 font-light text-lg">Application under review</p>
+        <section className="py-24 px-6 max-w-4xl mx-auto relative z-20">
+          <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between">
+            <div className="mb-8 md:mb-0">
+              <h3 className="font-serif text-2xl text-slate-900 font-bold mb-6">Education Support</h3>
+              <div className="space-y-4">
+                <div className="flex items-center space-x-3 text-emerald-600">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  <span className="font-medium">Need understood</span>
+                </div>
+                <div className="flex items-center space-x-3 text-emerald-600">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  <span className="font-medium">Service selected</span>
+                </div>
+                <div className="flex items-center space-x-3 text-slate-900">
+                  <div className="w-5 h-5 rounded-full border-4 border-orange-500 bg-white"></div>
+                  <span className="font-bold">Eligibility</span>
+                </div>
+                <div className="flex items-center space-x-3 text-slate-400">
+                  <div className="w-5 h-5 rounded-full border-2 border-slate-300"></div>
+                  <span className="font-medium">Documents</span>
+                </div>
+                <div className="flex items-center space-x-3 text-slate-400">
+                  <div className="w-5 h-5 rounded-full border-2 border-slate-300"></div>
+                  <span className="font-medium">Application</span>
+                </div>
               </div>
+            </div>
+            
+            <div className="flex-shrink-0">
               <button 
                 onClick={() => router.push(`/journey/${state.application.id}`)}
-                className="mt-8 md:mt-0 px-10 py-5 bg-white text-[#111] font-medium rounded-full hover:bg-gray-100 transition-colors tracking-wide text-lg"
+                className="px-8 py-4 bg-slate-900 text-white font-medium rounded-full hover:bg-teal-700 transition-colors shadow-md text-lg"
               >
-                Resume
+                View Journey
               </button>
-            </motion.div>
+            </div>
           </div>
         </section>
       )}
+
+      {/* 9. FINAL CTA */}
+      <section className="py-24 px-6 text-center max-w-2xl mx-auto relative z-20">
+        <h2 className="text-3xl font-serif font-bold text-slate-900 mb-8">
+          Have a government-service problem?
+        </h2>
+        <button 
+          onClick={() => {
+            if (textareaRef.current) {
+              textareaRef.current.focus();
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+          }}
+          className="inline-flex items-center space-x-2 px-8 py-4 bg-orange-600 text-white font-medium rounded-full hover:bg-orange-700 transition-colors shadow-lg text-lg"
+        >
+          <span>Start your journey</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+        </button>
+      </section>
+
     </div>
   );
 }

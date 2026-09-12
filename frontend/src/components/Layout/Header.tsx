@@ -8,30 +8,34 @@ export function Header() {
   const isJourney = pathname?.startsWith("/journey");
 
   return (
-    <header className="bg-white border-b border-gray-100 shadow-sm sticky top-0 z-50">
-      <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
+    <header className="bg-[#FAF4EB] border-b border-slate-200/60 sticky top-0 z-50 shadow-sm w-full">
+      <div className="w-full px-6 md:px-12 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center space-x-2">
-          <div className="text-red-600 text-2xl font-extrabold tracking-tight flex items-center">
+          <div className="text-slate-900 font-serif text-2xl font-bold tracking-tight">
             RAASTA
           </div>
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center space-x-6 text-sm font-medium text-gray-600">
-          <Link href="/" className="hover:text-red-600 transition-colors">Home</Link>
-          <Link href="#" className="hover:text-red-600 transition-colors">My Journeys</Link>
-          <Link href="#" className="hover:text-red-600 transition-colors">Benefits</Link>
-          <Link href="#" className="hover:text-red-600 transition-colors">Help</Link>
-          <Link href="#" className="hover:text-red-600 transition-colors">Profile</Link>
+        <nav className="hidden md:flex items-center space-x-8 text-sm font-medium text-slate-600">
+          <Link href="/" className="hover:text-slate-900 transition-colors">Home</Link>
+          <button onClick={() => alert("My Journeys coming soon")} className="hover:text-slate-900 transition-colors">My Journeys</button>
+          <button onClick={() => alert("Documents coming soon")} className="hover:text-slate-900 transition-colors">Documents</button>
+          <button onClick={() => alert("Help coming soon")} className="hover:text-slate-900 transition-colors">Help</button>
         </nav>
+        
+        <div className="hidden md:flex items-center space-x-4">
+          <button onClick={() => alert("Profile coming soon")} className="text-sm font-medium text-slate-900 hover:text-orange-600 transition-colors">
+            Profile
+          </button>
+        </div>
 
         {/* Mobile Nav */}
-        <nav className="md:hidden flex items-center space-x-4 text-xs font-medium text-gray-600">
-          <Link href="/" className="hover:text-red-600">Home</Link>
-          <Link href="#" className="hover:text-red-600">Journeys</Link>
-          <Link href="#" className="hover:text-red-600">Benefits</Link>
-          <Link href="#" className="hover:text-red-600">Profile</Link>
-        </nav>
+        <div className="md:hidden flex items-center">
+          <button className="text-slate-600 hover:text-slate-900" onClick={() => alert("Menu clicked")}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+          </button>
+        </div>
       </div>
     </header>
   );
