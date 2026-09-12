@@ -96,6 +96,7 @@ export default function Home() {
   const router = useRouter();
   const { state, updateState } = useJourney();
   const [query, setQuery] = useState("");
+  const [aiResponse, setAiResponse] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [siriActive, setSiriActive] = useState(false);
   const [voiceState, setVoiceState] = useState("IDLE");
@@ -121,6 +122,7 @@ export default function Home() {
     const finalQuery = typeof overrideQuery === 'string' ? overrideQuery : query;
     if (!finalQuery.trim()) return;
     setLoading(true);
+    setAiResponse(null);
     
     try {
       const appState = {
@@ -160,13 +162,13 @@ export default function Home() {
         router.push("/journey/understand");
       } else if (data.status === "greeting") {
         const greetingText = data.next_best_action?.description || data.extraction?.summary || "Hello! I am RAASTA, your citizen service assistant. How can I help you today?";
-        setQuery(greetingText);
+        setAiResponse(greetingText);
         setVoiceState("IDLE");
         setLoading(false);
       } else {
         console.warn("Pipeline status:", data.status);
         const infoText = data.next_best_action?.description || "I can help you find government schemes. Could you tell me a little more about your situation?";
-        setQuery(infoText);
+        setAiResponse(infoText);
         setVoiceState("IDLE");
         setLoading(false);
       }
@@ -202,6 +204,7 @@ export default function Home() {
 
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setQuery(e.target.value);
+    setAiResponse(null);
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
@@ -304,6 +307,24 @@ export default function Home() {
               </button>
             </div>
           </div>
+          
+          <AnimatePresence>
+            {aiResponse && (
+              <motion.div
+                initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                animate={{ opacity: 1, height: 'auto', marginTop: 16 }}
+                exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="p-4 bg-orange-50 border border-orange-200 rounded-2xl text-orange-800 text-sm md:text-base font-medium flex items-start space-x-3">
+                  <svg className="w-6 h-6 text-orange-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>{aiResponse}</span>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
 
         {/* 4. EXAMPLE CHIPS */}
@@ -319,6 +340,7 @@ export default function Home() {
               key={chip} 
               onClick={() => {
                 setQuery(`I need help with a ${chip.toLowerCase()}`);
+                setAiResponse(null);
                 if (textareaRef.current) textareaRef.current.focus();
               }}
               className="px-4 py-2 bg-white border border-slate-200 rounded-full text-sm font-medium text-slate-700 hover:border-slate-400 hover:text-slate-900 transition-colors shadow-sm"
